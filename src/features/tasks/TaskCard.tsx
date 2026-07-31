@@ -36,7 +36,6 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState(task.progress_notes ?? '');
   const scope = useRef<HTMLDivElement>(null);
-  const chipRef = useRef<HTMLButtonElement>(null);
 
   const canUpdate = isAdmin || task.assigned_to === profile?.id;
   const isAssignee = task.assigned_to === profile?.id;
