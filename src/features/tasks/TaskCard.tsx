@@ -77,20 +77,6 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
     { scope, dependencies: [expanded] }
   );
 
-  const cycleStatus = () => {
-    if (!canUpdate) return;
-    const order: TaskStatus[] = ['pending', 'in_progress', 'completed'];
-    const next = order[(order.indexOf(task.status) + 1) % 3];
-
-    gsap.fromTo(
-      chipRef.current,
-      { scale: 0.88 },
-      { scale: 1, duration: 0.45, ease: 'back.out(2)' }
-    );
-
-    updateTask.mutate({ id: task.id, status: next });
-  };
-
   const saveNotes = () => {
     if (notes !== (task.progress_notes ?? '')) {
       updateTask.mutate({ id: task.id, progress_notes: notes });
@@ -118,16 +104,25 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
             </p>
 
             <div className="flex items-center gap-1 shrink-0">
-              <button
-                ref={chipRef}
-                onClick={cycleStatus}
-                disabled={!canUpdate}
-                className={`chip ${statusStyles[task.status]} ${
-                  canUpdate ? 'cursor-pointer hover:brightness-95' : 'cursor-default'
-                }`}
-              >
-                {statusLabels[task.status]}
-              </button>
+              {canUpdate ? (
+                <select
+                  value={task.status}
+                  onChange={(e) => updateTask.mutate({ id: task.id, status: e.target.value as TaskStatus })}
+                  className={`chip ${statusStyles[task.status]} cursor-pointer hover:brightness-95 appearance-none pr-6 bg-no-repeat bg-[right_6px_center] outline-none`}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")`,
+                  }}
+                  title="Update Status"
+                >
+                  <option value="pending" className="text-text-primary bg-surface">Pending</option>
+                  <option value="in_progress" className="text-text-primary bg-surface">In Progress</option>
+                  <option value="completed" className="text-text-primary bg-surface">Completed</option>
+                </select>
+              ) : (
+                <div className={`chip ${statusStyles[task.status]} cursor-default`}>
+                  {statusLabels[task.status]}
+                </div>
+              )}
 
               {isAdmin && onEdit && (
                 <button
