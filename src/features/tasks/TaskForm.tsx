@@ -5,6 +5,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/uiverse/Button';
 import { Modal, Field } from '../../components/ui/Modal';
 import { useProfiles } from '../profiles/api';
+import { useEvents } from '../events/api';
 import { useAuth } from '../auth/AuthContext';
 import type { Task } from '../../types';
 
