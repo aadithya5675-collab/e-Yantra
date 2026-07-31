@@ -103,7 +103,7 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
             </p>
 
             <div className="flex items-center gap-1 shrink-0">
-              {canUpdate ? (
+              {isAssignee ? (
                 <select
                   value={task.status}
                   onChange={(e) => updateTask.mutate({ id: task.id, status: e.target.value as TaskStatus })}
