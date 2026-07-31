@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +34,7 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
   const { profile } = useAuth();
   const { data: profiles } = useProfiles();
   const { data: events } = useEvents();
+  const [adminSetsDate, setAdminSetsDate] = useState(false);
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -93,17 +95,46 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
             <Input label="Due Time" type="time" {...register('due_time')} />
           </div>
         ) : (
-          <div className="bg-surface p-4 rounded-xl border border-hairline text-center text-[13px] text-text-secondary flex flex-col items-center gap-1">
-            {task?.due_date ? (
-              <>
-                <span className="font-medium text-text-primary">Due Date Set</span>
-                <span>{task.due_date} {task.due_time ? `· ${task.due_time.slice(0, 5)}` : ''}</span>
-              </>
+          <div className="bg-surface p-4 rounded-xl border border-hairline text-[13px] text-text-secondary flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-text-primary">Due Date Preference</span>
+              <div className="flex bg-bg-page p-1 rounded-lg border border-hairline">
+                <button
+                  type="button"
+                  onClick={() => setAdminSetsDate(false)}
+                  className={`px-3 py-1 rounded-md transition-colors ${!adminSetsDate ? 'bg-surface shadow-sm text-text-primary' : 'hover:text-text-primary'}`}
+                >
+                  Let Assignee Set
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminSetsDate(true)}
+                  className={`px-3 py-1 rounded-md transition-colors ${adminSetsDate ? 'bg-surface shadow-sm text-text-primary' : 'hover:text-text-primary'}`}
+                >
+                  Set Manually
+                </button>
+              </div>
+            </div>
+
+            {adminSetsDate ? (
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <Input label="Due Date" type="date" {...register('due_date')} />
+                <Input label="Due Time" type="time" {...register('due_time')} />
+              </div>
             ) : (
-              <span>The assignee will set their own due date and time.</span>
+              <div className="text-center py-2">
+                {task?.due_date ? (
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="font-medium text-text-primary">Due Date Set</span>
+                    <span>{task.due_date} {task.due_time ? `· ${task.due_time.slice(0, 5)}` : ''}</span>
+                  </div>
+                ) : (
+                  <span>The assignee will set their own due date and time.</span>
+                )}
+                <input type="hidden" {...register('due_date')} />
+                <input type="hidden" {...register('due_time')} />
+              </div>
             )}
-            <input type="hidden" {...register('due_date')} />
-            <input type="hidden" {...register('due_time')} />
           </div>
         )}
 
