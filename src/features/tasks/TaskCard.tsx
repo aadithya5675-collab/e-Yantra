@@ -39,7 +39,17 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
   const chipRef = useRef<HTMLButtonElement>(null);
 
   const canUpdate = isAdmin || task.assigned_to === profile?.id;
-  const hasDetail = Boolean(task.description) || canUpdate;
+  const isAssignee = task.assigned_to === profile?.id;
+  const hasDetail = Boolean(task.description) || canUpdate || isAssignee;
+
+  const [dueDate, setDueDate] = useState(task.due_date ?? '');
+  const [dueTime, setDueTime] = useState(task.due_time ?? '');
+
+  const saveDueDate = () => {
+    if (dueDate !== (task.due_date ?? '') || dueTime !== (task.due_time ?? '')) {
+      updateTask.mutate({ id: task.id, due_date: dueDate || null, due_time: dueTime || null });
+    }
+  };
 
   // Expand/collapse the detail drawer by measured height, so it never jumps.
   useGSAP(
@@ -175,6 +185,31 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
                       onChange={e => setNotes(e.target.value)}
                       onBlur={saveNotes}
                     />
+                  )}
+
+                  {isAssignee && (
+                    <div className="grid grid-cols-2 gap-3 mt-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[12px] font-medium text-text-secondary">Due Date</label>
+                        <input
+                          type="date"
+                          className="field text-[13px]"
+                          value={dueDate}
+                          onChange={e => setDueDate(e.target.value)}
+                          onBlur={saveDueDate}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[12px] font-medium text-text-secondary">Due Time</label>
+                        <input
+                          type="time"
+                          className="field text-[13px]"
+                          value={dueTime}
+                          onChange={e => setDueTime(e.target.value)}
+                          onBlur={saveDueDate}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

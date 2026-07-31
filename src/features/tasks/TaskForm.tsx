@@ -1,11 +1,11 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/uiverse/Button';
 import { Modal, Field } from '../../components/ui/Modal';
 import { useProfiles } from '../profiles/api';
-import { useEvents } from '../events/api';
+import { useAuth } from '../auth/AuthContext';
 import type { Task } from '../../types';
 
 const schema = z.object({
@@ -29,10 +29,11 @@ interface Props {
 }
 
 export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }: Props) {
+  const { profile } = useAuth();
   const { data: profiles } = useProfiles();
   const { data: events } = useEvents();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: task?.title ?? '',
@@ -44,6 +45,8 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
       due_time: task?.due_time ?? '',
     },
   });
+
+  const assignedTo = useWatch({ control, name: 'assigned_to' });
 
   return (
     <Modal title={task ? 'Edit Task' : 'New Task'} onClose={onClose}>
@@ -83,10 +86,16 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
           </select>
         </Field>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Due Date" type="date" {...register('due_date')} />
-          <Input label="Due Time" type="time" {...register('due_time')} />
-        </div>
+        {(!assignedTo || assignedTo === profile?.id) ? (
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Due Date" type="date" {...register('due_date')} />
+            <Input label="Due Time" type="time" {...register('due_time')} />
+          </div>
+        ) : (
+          <div className="bg-surface p-4 rounded-xl border border-hairline text-center text-[13px] text-text-secondary">
+            The assignee will set their own due date and time.
+          </div>
+        )}
 
         <div className="flex gap-3 pt-3">
           <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>
