@@ -26,7 +26,12 @@ export function ManageTasks() {
     : tasks;
 
   const handleSubmit = async (data: any) => {
-    const payload = { ...data, event_id: data.event_id || null };
+    const payload = { 
+      ...data, 
+      event_id: data.event_id || null,
+      due_date: data.due_date || null,
+      due_time: data.due_time || null
+    };
     if (editing) {
       await updateTask.mutateAsync({ id: editing.id, ...payload });
     } else {

@@ -30,7 +30,12 @@ export function EventDetail() {
   const [editing, setEditing] = useState<Task | undefined>();
 
   const handleSubmit = async (data: any) => {
-    const payload = { ...data, event_id: data.event_id || id };
+    const payload = { 
+      ...data, 
+      event_id: data.event_id || id,
+      due_date: data.due_date || null,
+      due_time: data.due_time || null
+    };
     if (editing) {
       await updateTask.mutateAsync({ id: editing.id, ...payload });
     } else {
