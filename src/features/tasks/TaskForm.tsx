@@ -93,8 +93,17 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
             <Input label="Due Time" type="time" {...register('due_time')} />
           </div>
         ) : (
-          <div className="bg-surface p-4 rounded-xl border border-hairline text-center text-[13px] text-text-secondary">
-            The assignee will set their own due date and time.
+          <div className="bg-surface p-4 rounded-xl border border-hairline text-center text-[13px] text-text-secondary flex flex-col items-center gap-1">
+            {task?.due_date ? (
+              <>
+                <span className="font-medium text-text-primary">Due Date Set</span>
+                <span>{task.due_date} {task.due_time ? `· ${task.due_time.slice(0, 5)}` : ''}</span>
+              </>
+            ) : (
+              <span>The assignee will set their own due date and time.</span>
+            )}
+            <input type="hidden" {...register('due_date')} />
+            <input type="hidden" {...register('due_time')} />
           </div>
         )}
 
