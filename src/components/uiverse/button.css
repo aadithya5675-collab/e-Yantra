@@ -1,0 +1,81 @@
+/* Apple-style pill buttons: 980px radius, flat, color-led — never shadow-led */
+.uiverse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border-radius: 980px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  transition: background-color 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+              color 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+              border-color 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+              opacity 0.22s ease,
+              transform 0.12s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.uiverse-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
+.uiverse-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.uiverse-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Sizes — generous horizontal padding keeps the pill legible */
+.uiverse-btn-sm { padding: 0.375rem 1rem;    font-size: 0.8125rem; }
+.uiverse-btn-md { padding: 0.5rem 1.25rem;   font-size: 0.9375rem; }
+.uiverse-btn-lg { padding: 0.75rem 1.75rem;  font-size: 1.0625rem; }
+
+/* Primary — filled Apple Blue */
+.uiverse-btn-primary {
+  background: var(--accent-color);
+  color: #fff;
+}
+.uiverse-btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+/* Secondary — soft gray fill, blue text and border */
+.uiverse-btn-secondary {
+  background: var(--bg-surface);
+  color: var(--accent-color);
+  border-color: color-mix(in srgb, var(--accent-color) 35%, transparent);
+}
+.uiverse-btn-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-color) 8%, var(--bg-surface));
+  border-color: var(--accent-color);
+}
+
+/* Danger */
+.uiverse-btn-danger {
+  background: transparent;
+  color: var(--danger-color);
+  border-color: color-mix(in srgb, var(--danger-color) 35%, transparent);
+}
+.uiverse-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger-color) 8%, transparent);
+  border-color: var(--danger-color);
+}
+
+/* Ghost — text-first, quiet */
+.uiverse-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.uiverse-btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+  color: var(--text-primary);
+}
