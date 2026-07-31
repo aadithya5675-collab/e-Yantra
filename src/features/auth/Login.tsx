@@ -90,7 +90,7 @@ export function Login() {
                 label="Username"
                 type="text"
                 autoComplete="username"
-                placeholder="aadithya"
+                placeholder="username"
                 error={errors.username?.message}
                 {...register('username')}
               />
