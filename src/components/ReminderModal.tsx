@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase/client';
 import { Button } from './uiverse/Button';
 import { Input } from './ui/Input';
@@ -12,6 +13,7 @@ interface ReminderModalProps {
 }
 
 export function ReminderModal({ task, onDismiss, onSaved }: ReminderModalProps) {
+  const queryClient = useQueryClient();
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +30,7 @@ export function ReminderModal({ task, onDismiss, onSaved }: ReminderModalProps) 
     
     setIsSubmitting(false);
     if (!error) {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       onSaved();
     } else {
       console.error('Failed to update task:', error);

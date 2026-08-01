@@ -34,7 +34,7 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
   const { profile } = useAuth();
   const { data: profiles } = useProfiles();
   const { data: events } = useEvents();
-  const [adminSetsDate, setAdminSetsDate] = useState(false);
+  const [adminSetsDate, setAdminSetsDate] = useState(Boolean(task?.due_date));
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),

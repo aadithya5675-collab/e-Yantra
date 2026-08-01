@@ -28,10 +28,15 @@ export function EventsPage() {
   const taskCountFor = (id: string) => tasks?.filter(t => t.event_id === id).length ?? 0;
 
   const handleSubmit = async (data: any) => {
+    const payload = {
+      ...data,
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+    };
     if (editing) {
-      await updateEvent.mutateAsync({ id: editing.id, ...data });
+      await updateEvent.mutateAsync({ id: editing.id, ...payload });
     } else {
-      await createEvent.mutateAsync({ ...data, created_by: profile?.id });
+      await createEvent.mutateAsync({ ...payload, created_by: profile?.id });
     }
     setShowForm(false);
     setEditing(undefined);
