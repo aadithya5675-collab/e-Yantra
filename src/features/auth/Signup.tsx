@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase/client';
 import './Auth.css';
 
@@ -15,8 +15,8 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export function Signup() {
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -24,9 +24,8 @@ export function Signup() {
 
   const onSubmit = async (data: SignupFormData) => {
     setError(null);
-    setSuccess(false);
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError, data: authData } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -40,8 +39,11 @@ export function Signup() {
 
     if (signUpError) {
       setError(signUpError.message);
+    } else if (authData.session) {
+      navigate('/');
     } else {
-      setSuccess(true);
+      // Just in case email confirmation was turned back on
+      setError('Account created! Please check your email.');
     }
   };
 
@@ -56,12 +58,6 @@ export function Signup() {
         {error && (
           <div className="text-red-600 font-bold text-sm bg-red-100 p-2 rounded border-2 border-black w-full">
             {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="text-green-700 font-bold text-sm bg-green-100 p-2 rounded border-2 border-black w-full">
-            Account created! Please check your email for the verification link before logging in.
           </div>
         )}
 
