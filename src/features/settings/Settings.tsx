@@ -68,7 +68,7 @@ export function Settings() {
           Settings
         </h1>
         <p className="mt-2 text-[17px] text-text-secondary">
-          {profile?.display_name} · <span className="capitalize">{profile?.role}</span>
+          {profile?.display_name} · <span className="capitalize">{profile?.is_leader ? 'Team Leader' : profile?.role === 'admin' ? 'Admin' : 'Team Member'}</span>
         </p>
       </Reveal>
 
@@ -162,16 +162,18 @@ function TeamManagement({ teamId }: { teamId: number }) {
 
   const fetchMembers = async () => {
     setLoading(true);
-    // Fetch members who have no team and are not the admin
-    const { data } = await supabase
+    // Fetch members who have no team and are not leaders
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .is('team_id', null)
-      .is('is_leader', null) // not a leader (wait, might be false or null)
-      .neq('email', 'uvira@uvira-apex.team');
+      .is('team_id', null);
       
-    // Handle both null and false for is_leader
-    setMembers(data?.filter(p => !p.is_leader) || []);
+    if (error) {
+      console.error("Error fetching members:", error);
+    }
+      
+    // Filter out leaders (could be false or null) and admins
+    setMembers(data?.filter(p => !p.is_leader && p.role !== 'admin') || []);
     setLoading(false);
   };
 
