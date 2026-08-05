@@ -11,6 +11,7 @@ import { Loader } from './components/uiverse/Loader';
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
 const LeaderboardPage = lazy(() => import('./features/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const AnnouncementsPage = lazy(() => import('./features/announcements/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage })));
+const MyTeam = lazy(() => import('./features/team/MyTeam').then(m => ({ default: m.MyTeam })));
 const MyTasks = lazy(() => import('./features/tasks/MyTasks').then(m => ({ default: m.MyTasks })));
 const ManageTasks = lazy(() => import('./features/tasks/ManageTasks').then(m => ({ default: m.ManageTasks })));
 const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
@@ -91,6 +92,7 @@ function App() {
                 <Route index element={<IndexRoute />} />
                 <Route path="leaderboard" element={<LeaderboardPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
+                <Route path="my-team" element={<MemberRoute><MyTeam /></MemberRoute>} />
                 <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />
                 <Route path="manage-tasks" element={<AdminRoute><ManageTasks /></AdminRoute>} />
                 <Route path="settings" element={<Settings />} />
