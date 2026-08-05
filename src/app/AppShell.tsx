@@ -67,7 +67,7 @@ export function AppShell() {
         style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="flex items-center gap-2.5">
           <Logo />
-          <span className="text-[15px] font-semibold tracking-tight">ARC Mission Control</span>
+          <span className="text-[15px] font-semibold tracking-tight">e-Yantra</span>
         </div>
         <ThemeToggle />
       </header>
@@ -160,7 +160,7 @@ function Brand() {
     <div className="h-16 flex items-center gap-2.5 px-5 border-b border-hairline">
       <Logo />
       <div className="leading-tight">
-        <p className="text-[14.5px] font-semibold tracking-tight text-text-primary">ARC Mission Control</p>
+        <p className="text-[14.5px] font-semibold tracking-tight text-text-primary">e-Yantra</p>
         <p className="text-[10.5px] uppercase tracking-[0.12em] text-text-muted">e-Yantra Operations</p>
       </div>
     </div>

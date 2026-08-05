@@ -30,7 +30,7 @@ export function AuthLayout({
             ARC
           </span>
           <div className="leading-tight">
-            <p className="text-[15px] font-semibold text-text-primary">ARC Mission Control</p>
+            <p className="text-[15px] font-semibold text-text-primary">e-Yantra</p>
             <p className="text-[11px] uppercase tracking-[0.14em] text-text-muted">Aviation &amp; Robotics Club</p>
           </div>
         </div>
@@ -57,7 +57,7 @@ export function AuthLayout({
             >
               ARC
             </span>
-            <span className="text-[15px] font-semibold">ARC Mission Control</span>
+            <span className="text-[15px] font-semibold">e-Yantra</span>
           </div>
 
           <h1 className="text-[26px] font-semibold tracking-tight text-text-primary">{heading}</h1>

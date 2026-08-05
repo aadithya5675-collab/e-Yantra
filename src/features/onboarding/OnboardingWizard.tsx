@@ -86,7 +86,7 @@ export function OnboardingWizard() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <header className="mb-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">ARC Mission Control · Onboarding</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-accent">e-Yantra · Onboarding</p>
         <h1 className="mt-1 text-2xl font-bold text-primary-text sm:text-3xl">
           {step === 'role' ? 'Welcome to ARC' : 'Form your team'}
         </h1>
@@ -261,7 +261,7 @@ export function OnboardingWizard() {
       )}
 
       <p className="mt-10 text-center text-xs text-muted-text">
-        ARC Mission Control is an internal club platform of the Aviation &amp; Robotics Club — not the official
+        e-Yantra is an internal club platform of the Aviation &amp; Robotics Club — not the official
         IIT Bombay / e-Yantra portal.
       </p>
     </div>
