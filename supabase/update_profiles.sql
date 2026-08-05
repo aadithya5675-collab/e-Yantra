@@ -48,13 +48,21 @@ ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS theme_id BIGINT REFERE
 
 -- Enable RLS but allow all operations for this demo
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public all on tasks" ON public.tasks;
 CREATE POLICY "Allow public all on tasks" ON public.tasks FOR ALL USING (true) WITH CHECK (true);
 
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public all on announcements" ON public.announcements;
 CREATE POLICY "Allow public all on announcements" ON public.announcements FOR ALL USING (true) WITH CHECK (true);
 
 ALTER TABLE public.announcement_acknowledgements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public all on acks" ON public.announcement_acknowledgements;
 CREATE POLICY "Allow public all on acks" ON public.announcement_acknowledgements FOR ALL USING (true) WITH CHECK (true);
+
+-- Allow updating profiles so Team Leaders can add members
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public update to profiles" ON public.profiles;
+CREATE POLICY "Allow public update to profiles" ON public.profiles FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 4. Insert the 7 custom themes from the Leaderboard
 -- First, clear old themes if they exist (WARNING: this will cascade delete teams using them if ON DELETE CASCADE is set, 

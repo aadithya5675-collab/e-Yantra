@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Loader2, Rocket, ShieldAlert, User, Users } from 'lucide-react';
 import { useThemes, useCreateTeam } from './api';
@@ -10,7 +10,7 @@ type RoleType = 'leader' | 'member' | null;
 
 export function OnboardingWizard() {
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { teamId, refreshProfile } = useAuth();
   const { data: themes, isLoading, isError, refetch } = useThemes();
   const createTeam = useCreateTeam();
 
@@ -20,6 +20,23 @@ export function OnboardingWizard() {
   const [name, setName] = useState('');
   const [officialId, setOfficialId] = useState('');
   const [description, setDescription] = useState('');
+
+  // Automatically redirect if they get a team assignment while waiting
+  useEffect(() => {
+    if (teamId) {
+      navigate('/', { replace: true });
+    }
+  }, [teamId, navigate]);
+
+  // Poll for profile updates while in the waiting room
+  useEffect(() => {
+    if (step === 'waiting') {
+      const interval = setInterval(() => {
+        refreshProfile();
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [step, refreshProfile]);
 
   const submit = () => {
     if (themeId == null || name.trim().length < 2) return;
