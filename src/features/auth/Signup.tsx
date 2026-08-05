@@ -85,7 +85,7 @@ export function Signup() {
         />
         {errors.password && <span className="text-red-600 font-bold text-xs">{errors.password.message}</span>}
 
-        <button className="brutalist-button-confirm" type="submit" disabled={isSubmitting || success}>
+        <button className="brutalist-button-confirm" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Creating...' : 'Register →'}
         </button>
 
