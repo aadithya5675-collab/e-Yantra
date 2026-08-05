@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Trophy, Megaphone, Cpu, Calendar, ClipboardList, ListTodo, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Trophy, Megaphone, ClipboardList, ListTodo, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { AlarmManager } from '../components/AlarmManager';
 import { PageTransition } from '../components/motion/PageTransition';
@@ -17,9 +17,7 @@ export function AppShell() {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
     { name: 'Announcements', path: '/announcements', icon: Megaphone },
-    { name: 'Equipment', path: '/equipment', icon: Cpu },
-    { name: 'Events', path: '/events', icon: Calendar },
-    { name: 'My Tasks', path: '/my-tasks', icon: ClipboardList },
+    ...(!isAdmin ? [{ name: 'My Tasks', path: '/my-tasks', icon: ClipboardList }] : []),
     ...(isAdmin ? [{ name: 'Manage Tasks', path: '/manage-tasks', icon: ListTodo }] : []),
     { name: 'Settings', path: '/settings', icon: Settings },
   ];

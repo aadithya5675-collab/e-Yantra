@@ -12,9 +12,6 @@ import { Loader } from './components/uiverse/Loader';
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
 const LeaderboardPage = lazy(() => import('./features/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const AnnouncementsPage = lazy(() => import('./features/announcements/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage })));
-const EquipmentPage = lazy(() => import('./features/equipment/EquipmentPage').then(m => ({ default: m.EquipmentPage })));
-const EventsPage = lazy(() => import('./features/events/EventsPage').then(m => ({ default: m.EventsPage })));
-const EventDetail = lazy(() => import('./features/events/EventDetail').then(m => ({ default: m.EventDetail })));
 const MyTasks = lazy(() => import('./features/tasks/MyTasks').then(m => ({ default: m.MyTasks })));
 const ManageTasks = lazy(() => import('./features/tasks/ManageTasks').then(m => ({ default: m.ManageTasks })));
 const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
@@ -48,6 +45,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function MemberRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin } = useAuth();
+  if (isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAuth();
   if (!isAdmin) return <Navigate to="/" replace />;
@@ -77,10 +80,7 @@ function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="leaderboard" element={<LeaderboardPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
-                <Route path="equipment" element={<EquipmentPage />} />
-                <Route path="events" element={<EventsPage />} />
-                <Route path="events/:id" element={<EventDetail />} />
-                <Route path="my-tasks" element={<MyTasks />} />
+                <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />
                 <Route path="manage-tasks" element={<AdminRoute><ManageTasks /></AdminRoute>} />
                 <Route path="settings" element={<Settings />} />
               </Route>
