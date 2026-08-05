@@ -61,6 +61,12 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function IndexRoute() {
+  const { isAdmin } = useAuth();
+  if (isAdmin) return <Dashboard />;
+  return <Navigate to="/leaderboard" replace />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -82,7 +88,7 @@ function App() {
                   </RequireTeam>
                 </ProtectedRoute>
               }>
-                <Route index element={<Dashboard />} />
+                <Route index element={<IndexRoute />} />
                 <Route path="leaderboard" element={<LeaderboardPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
                 <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />

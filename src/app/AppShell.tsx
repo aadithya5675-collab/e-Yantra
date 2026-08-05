@@ -10,7 +10,7 @@ export function AppShell() {
   const { isAdmin } = useAuth();
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    ...(isAdmin ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),
     { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
     { name: 'Announcements', path: '/announcements', icon: Megaphone },
     ...(!isAdmin ? [{ name: 'My Tasks', path: '/my-tasks', icon: ClipboardList }] : []),
