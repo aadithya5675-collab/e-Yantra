@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
 import { Reveal } from '../../components/motion/Reveal';
 import { Loader } from '../../components/uiverse/Loader';
-import { CheckCircle2, CircleDashed } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import type { Task, Profile } from '../../types';
 
 export function MyTeam() {
