@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { Login } from './features/auth/Login';
 import { Signup } from './features/auth/Signup';
-import { ChangePassword } from './features/auth/ChangePassword';
 import { AppShell } from './app/AppShell';
 import { Loader } from './components/uiverse/Loader';
 
@@ -36,11 +35,10 @@ function FullPageLoader() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, profile, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) return <FullPageLoader />;
   if (!user) return <Navigate to="/login" replace />;
-  if (profile?.must_change_password) return <Navigate to="/change-password" replace />;
 
   return <>{children}</>;
 }
@@ -66,7 +64,6 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/onboarding" element={
                 <ProtectedRoute>
                   <OnboardingWizard />
