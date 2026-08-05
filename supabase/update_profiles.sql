@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS public.announcement_acknowledgements (
 
 -- Ensure theme_id exists if the tables were already created previously
 ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS theme_id BIGINT REFERENCES public.themes(id) ON DELETE CASCADE;
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 ALTER TABLE public.announcements ADD COLUMN IF NOT EXISTS theme_id BIGINT REFERENCES public.themes(id) ON DELETE SET NULL;
 
 -- Enable RLS but allow all operations for this demo

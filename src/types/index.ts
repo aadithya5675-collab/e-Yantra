@@ -38,9 +38,11 @@ export interface Task {
   status: TaskStatus;
   progress_notes: string | null;
   priority: Priority;
+  start_date: string | null;
   due_date: string | null;
   due_time: string | null;
   delay_reason: string | null;
+  theme_id: number | null;
   alarm_acknowledged: boolean;
   created_by: string;
   created_at: string;
