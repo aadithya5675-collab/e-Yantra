@@ -1,44 +1,42 @@
-# ARC Mission Control
+# ARC Mission Control (e-Yantra)
 
-**Aviation & Robotics Club — e-Yantra Team Operations**
+A specialized dashboard and team management application for e-Yantra's ARC teams, built to handle team creation, task tracking, leaderboards, and announcements.
 
-An internal command-centre platform for managing the club's seven e-Yantra teams:
-onboarding, tasks, evidence, reviews, official marks, contribution points,
-announcements and equipment.
+## Stack
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router DOM
+- TanStack Query (React Query)
+- Supabase (PostgreSQL & Auth)
+- GSAP & Framer Motion (Animations)
+- Lucide React (Icons)
 
-> ⚠️ Internal club platform. **Not** the official IIT Bombay / e-Yantra portal.
+## Environment Variables
 
-## Monorepo layout
-- **`/` (root)** — React 19 + TypeScript + Vite frontend (ARC design system, onboarding).
-- **`/backend`** — Laravel 13 REST API (`/api/v1`), the canonical business layer.
-- **`/supabase`** — legacy migrations/edge function from the previous app (being superseded
-  by Laravel migrations; see `IMPLEMENTATION_REPORT.md`).
+Copy `.env.example` to `.env` and fill in your Supabase credentials:
 
-## Frontend
 ```bash
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+## Development Commands
+
+```bash
+# Install dependencies
 npm install
-cp .env.example .env     # set VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL
-npm run dev              # http://localhost:5173
-npm run build            # tsc -b && vite build
-npm run lint             # oxlint
+
+# Start local development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run linter
+npm run lint
 ```
 
-`.env` keys:
-```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...          # public, RLS-protected — safe in the browser
-VITE_API_URL=http://localhost:8000/api/v1
-```
-
-## Backend
-See [`backend/README.md`](backend/README.md) for Laravel setup, the secure
-`arc:bootstrap-admin` command, and the API surface.
-
-## Architecture, security & status
-See [`IMPLEMENTATION_REPORT.md`](IMPLEMENTATION_REPORT.md) — it documents what is built
-and verified, the exactly-one-theme rule, security decisions, and the remaining roadmap.
-
-## Key rule: one theme per team
-Each team leader selects **exactly one** e-Yantra challenge theme. There are no theme
-preferences, no primary/secondary, and no multi-theme array — enforced at the database,
-validation, action, policy and test layers.
+## Deployment
+This project is configured to deploy seamlessly on Vercel. Connect your repository and add the environment variables in the Vercel dashboard. No additional build settings are required.

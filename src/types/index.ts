@@ -1,5 +1,5 @@
 export type Role = 'admin' | 'member';
-export type EventStatus = 'upcoming' | 'ongoing' | 'completed';
+
 export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 export type Priority = 'low' | 'medium' | 'high';
 
@@ -17,21 +17,10 @@ export interface Profile {
   created_at?: string;
 }
 
-export interface TeamEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  status: EventStatus;
-  start_date: string | null;
-  end_date: string | null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
+
 
 export interface Task {
   id: string;
-  event_id: string | null;
   title: string;
   description: string | null;
   assigned_to: string;
@@ -48,5 +37,4 @@ export interface Task {
   created_at: string;
   updated_at: string;
   assigned_profile?: Profile;
-  event?: TeamEvent;
 }

@@ -146,7 +146,7 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
                 {task.due_time && ` · ${task.due_time.slice(0, 5)}`}
               </span>
             )}
-            {task.event && <span>{task.event.title}</span>}
+
           </div>
 
           {hasDetail && (
