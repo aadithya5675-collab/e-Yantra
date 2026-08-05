@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
-import { Loader2, Plus, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Clock } from 'lucide-react';
 import { Reveal } from '../../components/motion/Reveal';
 
 export function ManageTasks() {
@@ -46,7 +46,6 @@ export function ManageTasks() {
   const [themeId, setThemeId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
 
   const createTask = useMutation({
     mutationFn: async () => {
