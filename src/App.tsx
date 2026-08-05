@@ -43,6 +43,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RequireTeam({ children }: { children: React.ReactNode }) {
+  const { teamId, isAdmin } = useAuth();
+  if (!isAdmin && !teamId) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
+}
+
 function MemberRoute({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAuth();
   if (isAdmin) return <Navigate to="/" replace />;
@@ -71,7 +77,9 @@ function App() {
               } />
               <Route path="/" element={
                 <ProtectedRoute>
-                  <AppShell />
+                  <RequireTeam>
+                    <AppShell />
+                  </RequireTeam>
                 </ProtectedRoute>
               }>
                 <Route index element={<Dashboard />} />

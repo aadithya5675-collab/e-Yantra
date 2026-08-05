@@ -3,20 +3,25 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
+import { useAuth } from '../auth/AuthContext';
 import { ThemeWheel } from '../../components/uiverse/ThemeWheel';
 import { Loader } from '../../components/uiverse/Loader';
 
 export function LeaderboardPage() {
-  const [selectedTheme, setSelectedTheme] = useState<string>('1');
+  const { themeId, isAdmin } = useAuth();
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(themeId ? themeId.toString() : '1');
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // If user is not admin, force them to see their own theme's leaderboard
+  const activeThemeId = isAdmin ? selectedTheme : (themeId?.toString() || '1');
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['leaderboard', selectedTheme],
+    queryKey: ['leaderboard', activeThemeId],
     queryFn: async () => {
       let query = supabase.from('teams').select('id, name, official_eyantra_id, status, created_by, theme:themes!inner(id, name, slug)');
       
-      if (selectedTheme) {
-        query = query.eq('theme_id', selectedTheme);
+      if (activeThemeId) {
+        query = query.eq('theme_id', activeThemeId);
       }
 
       const { data, error } = await query;
@@ -57,17 +62,18 @@ export function LeaderboardPage() {
   return (
     <div ref={containerRef} className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-text-primary uppercase">
-            Leaderboard
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-text-primary">Leaderboard</h1>
+          <p className="text-sm text-text-secondary mt-1">Global rankings across all themes</p>
         </div>
-
-        {/* Theme Wheel */}
-        <div className="flex flex-col items-end gap-2">
-          <ThemeWheel value={selectedTheme} onChange={setSelectedTheme} />
-        </div>
+        
+        {isAdmin && (
+          <ThemeWheel 
+            value={selectedTheme || ''} 
+            onChange={(val) => setSelectedTheme(val)} 
+          />
+        )}
       </div>
 
       {/* Content */}

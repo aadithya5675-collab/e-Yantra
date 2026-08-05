@@ -145,7 +145,75 @@ export function Settings() {
             <LogOut size={15} /> Sign Out
           </Button>
         </div>
+
+        {profile?.is_leader && (
+          <div className="pt-8">
+            <TeamManagement teamId={profile.team_id!} />
+          </div>
+        )}
       </Reveal>
+    </div>
+  );
+}
+
+function TeamManagement({ teamId }: { teamId: number }) {
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchMembers = async () => {
+    setLoading(true);
+    // Fetch members who have no team and are not the admin
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .is('team_id', null)
+      .is('is_leader', null) // not a leader (wait, might be false or null)
+      .neq('email', 'uvira@uvira-apex.team');
+      
+    // Handle both null and false for is_leader
+    setMembers(data?.filter(p => !p.is_leader) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const addMember = async (userId: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ team_id: teamId })
+      .eq('id', userId);
+      
+    if (!error) {
+      fetchMembers();
+    }
+  };
+
+  return (
+    <div className="surface-card p-6">
+      <div className="mb-6">
+        <p className="text-[17px] font-semibold text-text-primary">Team Management</p>
+        <p className="text-[13px] text-text-secondary mt-1">Select available members to join your team.</p>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-text-secondary">Loading available members...</p>
+      ) : members.length === 0 ? (
+        <p className="text-sm text-text-secondary">No available members found. Everyone is currently assigned to a team.</p>
+      ) : (
+        <div className="space-y-3">
+          {members.map(member => (
+            <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-hairline bg-page/50">
+              <div>
+                <p className="text-sm font-medium text-text-primary">{member.display_name || member.full_name || member.username}</p>
+                <p className="text-xs text-text-secondary">{member.email}</p>
+              </div>
+              <Button size="sm" onClick={() => addMember(member.id)}>Add to Team</Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

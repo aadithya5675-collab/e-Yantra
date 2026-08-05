@@ -16,15 +16,25 @@ interface Announcement {
   acknowledgements: Array<{ profile_id: number }>;
 }
 
+import { useAuth } from '../auth/AuthContext';
+
 export function AnnouncementsPage() {
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
+  const { themeId, isAdmin } = useAuth();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['announcements'],
+    queryKey: ['announcements', themeId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('announcements').select('*');
-      if (error && error.code !== '42P01') throw error; // 42P01 is table does not exist
+      let query = supabase.from('announcements').select('*');
+      
+      // If not admin and they have a theme, show theme-specific + global announcements
+      if (!isAdmin && themeId) {
+        query = query.or(`theme_id.eq.${themeId},theme_id.is.null`);
+      }
+
+      const { data, error } = await query;
+      if (error && error.code !== '42P01' && error.code !== '42703') throw error; // Ignore table missing or column missing
       return { data: (data || []) as Announcement[] };
     },
   });

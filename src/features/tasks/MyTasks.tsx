@@ -5,8 +5,8 @@ import { Reveal } from '../../components/motion/Reveal';
 import type { Task } from '../../types';
 
 export function MyTasks() {
-  const { profile } = useAuth();
-  const { data: tasks, isLoading } = useTasks({ assigned_to: profile?.id });
+  const { themeId } = useAuth();
+  const { data: tasks, isLoading } = useTasks({ theme_id: themeId || undefined });
 
   const inProgress = tasks?.filter(t => t.status === 'in_progress') ?? [];
   const pending = tasks?.filter(t => t.status === 'pending') ?? [];

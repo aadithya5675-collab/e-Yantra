@@ -53,7 +53,7 @@ export function useCreateTeam() {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.from('teams').insert([{
+      const { data: teamData, error: teamError } = await supabase.from('teams').insert([{
         name: input.name,
         theme_id: input.theme_id,
         official_eyantra_id: input.official_eyantra_id,
@@ -61,8 +61,17 @@ export function useCreateTeam() {
         created_by: userData.user.id
       }]).select().single();
       
-      if (error) throw error;
-      return data as Team;
+      if (teamError) throw teamError;
+
+      // Update the user's profile to link them to this team as leader
+      const { error: profileError } = await supabase.from('profiles').update({
+        team_id: teamData.id,
+        is_leader: true,
+      }).eq('id', userData.user.id);
+
+      if (profileError) throw profileError;
+
+      return teamData as Team;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['me'] });

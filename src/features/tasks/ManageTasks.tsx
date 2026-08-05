@@ -28,7 +28,7 @@ export function ManageTasks() {
   const handleSubmit = async (data: any) => {
     const payload = { 
       ...data, 
-      event_id: data.event_id || null,
+      theme_id: data.theme_id || null,
       due_date: data.due_date || null,
       due_time: data.due_time || null
     };

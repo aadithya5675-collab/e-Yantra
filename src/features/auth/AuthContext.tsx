@@ -8,6 +8,9 @@ interface AuthState {
   user: User | null;
   profile: Profile | null;
   isAdmin: boolean;
+  isLeader: boolean;
+  teamId: number | null;
+  themeId: number | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -23,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, teams(theme_id)')
       .eq('id', userId)
       .single();
     setProfile(data);
@@ -68,7 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user: session?.user ?? null,
         profile,
-        isAdmin: profile?.role === 'admin',
+        isAdmin: session?.user?.email === 'uvira@uvira-apex.team',
+        isLeader: !!profile?.is_leader,
+        teamId: profile?.team_id ?? null,
+        themeId: (profile as any)?.teams?.theme_id ?? null,
         isLoading,
         signOut,
         refreshProfile,

@@ -6,15 +6,15 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/uiverse/Button';
 import { Modal, Field } from '../../components/ui/Modal';
 import { useProfiles } from '../profiles/api';
-import { useEvents } from '../events/api';
 import { useAuth } from '../auth/AuthContext';
+import { useThemes } from '../onboarding/api';
 import type { Task } from '../../types';
 
 const schema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   assigned_to: z.string().min(1, 'Assign to someone'),
-  event_id: z.string().optional(),
+  theme_id: z.string().optional(),
   priority: z.enum(['low', 'medium', 'high']),
   due_date: z.string().optional(),
   due_time: z.string().optional(),
@@ -24,16 +24,16 @@ type FormData = z.infer<typeof schema>;
 
 interface Props {
   task?: Task;
-  defaultEventId?: string;
+  defaultThemeId?: string;
   onSubmit: (data: FormData) => void;
   onClose: () => void;
   isLoading?: boolean;
 }
 
-export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }: Props) {
+export function TaskForm({ task, defaultThemeId, onSubmit, onClose, isLoading }: Props) {
   const { profile } = useAuth();
   const { data: profiles } = useProfiles();
-  const { data: events } = useEvents();
+  const { data: themes } = useThemes();
   const [adminSetsDate, setAdminSetsDate] = useState(Boolean(task?.due_date));
 
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
@@ -42,7 +42,7 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
       title: task?.title ?? '',
       description: task?.description ?? '',
       assigned_to: task?.assigned_to ?? '',
-      event_id: task?.event_id ?? defaultEventId ?? '',
+      theme_id: (task as any)?.theme_id?.toString() ?? defaultThemeId ?? '',
       priority: task?.priority ?? 'medium',
       due_date: task?.due_date ?? '',
       due_time: task?.due_time ?? '',
@@ -60,26 +60,25 @@ export function TaskForm({ task, defaultEventId, onSubmit, onClose, isLoading }:
           <textarea className="field resize-none" rows={3} {...register('description')} />
         </Field>
 
-        <Field label="Assign To">
-          <select className="field" {...register('assigned_to')}>
-            <option value="">Select member</option>
-            {profiles?.map(p => (
-              <option key={p.id} value={p.id}>{p.display_name}</option>
-            ))}
-          </select>
-          {errors.assigned_to && (
-            <span className="text-[12px] text-danger-color">{errors.assigned_to.message}</span>
-          )}
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Assign To">
+            <select className="field" {...register('assigned_to')}>
+              <option value="">Select a member...</option>
+              {profiles?.map(p => (
+                <option key={p.id} value={p.id}>{p.display_name}</option>
+              ))}
+            </select>
+          </Field>
 
-        <Field label="Event">
-          <select className="field" {...register('event_id')}>
-            <option value="">No event</option>
-            {events?.filter(e => e.status !== 'completed').map(e => (
-              <option key={e.id} value={e.id}>{e.title}</option>
-            ))}
-          </select>
-        </Field>
+          <Field label="Theme">
+            <select className="field" {...register('theme_id')}>
+              <option value="">Any Theme</option>
+              {themes?.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
 
         <Field label="Priority">
           <select className="field" {...register('priority')}>

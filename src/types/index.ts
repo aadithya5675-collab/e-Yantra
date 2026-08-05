@@ -12,6 +12,8 @@ export interface Profile {
   role: string;
   must_change_password?: boolean;
   notifications_enabled?: boolean;
+  team_id?: number | null;
+  is_leader?: boolean;
   created_at?: string;
 }
 
