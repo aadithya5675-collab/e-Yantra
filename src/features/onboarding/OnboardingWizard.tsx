@@ -150,7 +150,7 @@ export function OnboardingWizard() {
             {createTeam.isError && (
               <p className="flex items-center gap-2 text-sm text-danger" role="alert">
                 <ShieldAlert size={16} />
-                {createTeam.error.firstError() ?? createTeam.error.message}
+                {createTeam.error.message}
               </p>
             )}
 

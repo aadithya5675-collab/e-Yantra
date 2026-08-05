@@ -8,7 +8,7 @@ import { GhostLoader } from '../../components/uiverse/GhostLoader';
 import './Auth.css';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Enter your username'),
+  email: z.string().email('Enter your email address'),
   password: z.string().min(1, 'Enter your password'),
 });
 
@@ -26,19 +26,13 @@ export function Login() {
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
     
-    const { data: realEmail } = await supabase.rpc('get_email_by_username', {
-      p_username: data.username.trim()
-    });
-
-    const emailToUse = realEmail || data.username.trim();
-
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: emailToUse,
+      email: data.email.trim(),
       password: data.password,
     });
 
     if (signInError) {
-      setError('Invalid username or password');
+      setError('Invalid email or password');
     } else {
       setIsTransitioning(true);
       setTimeout(() => {
@@ -71,12 +65,11 @@ export function Login() {
 
         <input 
           className="brutalist-input" 
-          placeholder="Enter your username" 
-          type="text" 
-          autoComplete="username"
-          {...register('username')}
+          placeholder="Enter your email" 
+          {...register('email')} 
+          disabled={isSubmitting}
         />
-        {errors.username && <span className="text-red-600 font-bold text-xs">{errors.username.message}</span>}
+        {errors.email && <p className="text-red-500 text-xs font-bold -mt-3 text-left">{errors.email.message}</p>}
 
         <input 
           className="brutalist-input" 

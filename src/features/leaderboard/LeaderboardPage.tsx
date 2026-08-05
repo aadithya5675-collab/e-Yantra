@@ -1,21 +1,10 @@
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, ShieldCheck } from 'lucide-react';
-import { api } from '../../lib/api/client';
+import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 import { ThemeWheel } from '../../components/uiverse/ThemeWheel';
 import { Loader } from '../../components/uiverse/Loader';
-
-interface Standing {
-  team_id: number;
-  team_name: string;
-  arc_code: string;
-  theme: { id: number; name: string; slug: string } | null;
-  leader_name: string;
-  official_score: number;
-  arc_points: number;
-  completed_tasks: number;
-}
 
 export function LeaderboardPage() {
   const [selectedTheme, setSelectedTheme] = useState<string>('1');
@@ -24,8 +13,25 @@ export function LeaderboardPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['leaderboard', selectedTheme],
     queryFn: async () => {
-      const param = `?theme_id=${selectedTheme}`;
-      return api.get<{ data: Standing[] }>(`/leaderboard${param}`);
+      let query = supabase.from('teams').select('id, name, official_eyantra_id, status, created_by, theme:themes!inner(id, name, slug)');
+      
+      if (selectedTheme) {
+        query = query.eq('theme_id', selectedTheme);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      return (data || []).map((t: any) => ({
+        team_id: t.id,
+        team_name: t.name,
+        arc_code: t.official_eyantra_id || 'N/A',
+        leader_name: t.created_by ? 'Team Leader' : 'N/A', // We can join profiles later if needed
+        official_score: 0,
+        arc_points: 0,
+        completed_tasks: 0,
+        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme
+      }));
     },
   });
 
@@ -45,7 +51,7 @@ export function LeaderboardPage() {
     { scope: containerRef, dependencies: [data] }
   );
 
-  const standings = data?.data || [];
+  const standings = data || [];
   const sortedStandings = [...standings].sort((a, b) => b.official_score - a.official_score);
 
   return (

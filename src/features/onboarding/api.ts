@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { api, ApiError, type Wrapped } from '../../lib/api/client';
+import { supabase } from '../../lib/supabase/client';
 import type { Team, Theme } from '../../types/arc';
 
 // Zod schema validates the shape of important API responses at the boundary.
@@ -30,8 +30,9 @@ export function useThemes() {
   return useQuery({
     queryKey: ['themes'],
     queryFn: async (): Promise<Theme[]> => {
-      const res = await api.get<Wrapped<unknown[]>>('/themes');
-      return z.array(themeSchema).parse(res.data);
+      const { data, error } = await supabase.from('themes').select('*').order('display_order');
+      if (error) throw error;
+      return z.array(themeSchema).parse(data);
     },
     staleTime: 5 * 60_000,
   });
@@ -47,10 +48,21 @@ export interface CreateTeamInput {
 
 export function useCreateTeam() {
   const qc = useQueryClient();
-  return useMutation<Team, ApiError, CreateTeamInput>({
+  return useMutation<Team, Error, CreateTeamInput>({
     mutationFn: async (input) => {
-      const res = await api.post<Wrapped<Team>>('/teams', input);
-      return res.data;
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.from('teams').insert([{
+        name: input.name,
+        theme_id: input.theme_id,
+        official_eyantra_id: input.official_eyantra_id,
+        description: input.description,
+        created_by: userData.user.id
+      }]).select().single();
+      
+      if (error) throw error;
+      return data as Team;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['me'] });

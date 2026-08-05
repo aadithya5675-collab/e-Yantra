@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Cpu, Calendar, PackageCheck, AlertCircle, X } from 'lucide-react';
-import { api, ApiError } from '../../lib/api/client';
+import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 
 interface Item {
@@ -25,23 +25,35 @@ export function EquipmentPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['equipment'],
-    queryFn: () => api.get<{ data: Item[] }>('/equipment'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('equipment').select('*');
+      if (error && error.code !== '42P01') throw error;
+      return { data: (data || []) as Item[] };
+    },
   });
 
   const bookMutation = useMutation({
-    mutationFn: (itemId: number) =>
-      api.post(`/equipment/${itemId}/book`, {
+    mutationFn: async (itemId: number) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Not authenticated');
+
+      const { error } = await supabase.from('equipment_bookings').insert([{
+        equipment_id: itemId,
+        profile_id: userData.user.id,
         quantity,
         start_time: new Date(startTime).toISOString(),
         end_time: new Date(endTime).toISOString(),
-      }),
+      }]);
+      if (error && error.code !== '42P01') throw error;
+      return {};
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['equipment'] });
       setSelectedItem(null);
       setErrorMsg(null);
     },
-    onError: (err: ApiError) => {
-      setErrorMsg(err.message || 'Equipment booking failed.');
+    onError: (err: any) => {
+      setErrorMsg(err.message || 'Failed to book equipment');
     },
   });
 

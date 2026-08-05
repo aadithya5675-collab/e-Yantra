@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Megaphone, Pin, CheckCircle, Clock } from 'lucide-react';
-import { api } from '../../lib/api/client';
+import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 
 interface Announcement {
@@ -22,11 +22,21 @@ export function AnnouncementsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['announcements'],
-    queryFn: () => api.get<{ data: Announcement[] }>('/announcements'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('announcements').select('*');
+      if (error && error.code !== '42P01') throw error; // 42P01 is table does not exist
+      return { data: (data || []) as Announcement[] };
+    },
   });
 
   const ackMutation = useMutation({
-    mutationFn: (id: number) => api.post(`/announcements/${id}/acknowledge`, {}),
+    mutationFn: async (id: number) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      const { error } = await supabase.from('announcement_acknowledgements').insert([{ announcement_id: id, profile_id: userData.user.id }]);
+      if (error && error.code !== '42P01') throw error;
+      return {};
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
     },

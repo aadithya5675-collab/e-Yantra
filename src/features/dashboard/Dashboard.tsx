@@ -1,11 +1,11 @@
 import { useAuth } from '../auth/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../lib/api/client';
+import { supabase } from '../../lib/supabase/client';
 import { Reveal } from '../../components/motion/Reveal';
 import { AnimatedNumber } from '../../components/motion/AnimatedNumber';
 import { Loader } from '../../components/uiverse/Loader';
 
-// Same standing interface returned by /leaderboard
+// Same standing interface
 interface Standing {
   team_id: number;
   team_name: string;
@@ -16,15 +16,21 @@ interface Standing {
 export function Dashboard() {
   const { profile } = useAuth();
 
-  // Fetch all teams by querying the leaderboard with no filters
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-teams'],
     queryFn: async () => {
-      return api.get<{ data: Standing[] }>('/leaderboard');
+      const { data, error } = await supabase.from('teams').select('id, name, official_eyantra_id, theme:themes(id, name, slug)');
+      if (error) throw error;
+      return (data || []).map((t: any) => ({
+        team_id: t.id,
+        team_name: t.name,
+        arc_code: t.official_eyantra_id || 'N/A',
+        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme
+      }));
     },
   });
 
-  const teams = data?.data || [];
+  const teams = data || [];
   const totalTeams = teams.length;
 
   // Group teams by theme
