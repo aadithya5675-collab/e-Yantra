@@ -17,6 +17,7 @@ interface Announcement {
 }
 
 import { useAuth } from '../auth/AuthContext';
+import { CreateAnnouncement } from './CreateAnnouncement';
 
 export function AnnouncementsPage() {
   const queryClient = useQueryClient();
@@ -72,7 +73,7 @@ export function AnnouncementsPage() {
 
   return (
     <div ref={containerRef} className="space-y-6 max-w-4xl mx-auto">
-      <div className="border-b border-hairline pb-4">
+      <div className="border-b border-hairline pb-4 mb-8">
         <div className="flex items-center gap-2.5">
           <Megaphone className="w-6 h-6 text-cyan-400" />
           <h1 className="text-2xl font-bold tracking-tight text-text-primary">
@@ -83,6 +84,14 @@ export function AnnouncementsPage() {
           Official communications, guidelines, and competition deadlines from ARC lead engineers
         </p>
       </div>
+
+      {isAdmin && <CreateAnnouncement />}
+
+      {isAdmin && (
+        <h2 className="text-xl font-bold uppercase tracking-tight text-text-primary mb-4 mt-12 border-b border-hairline pb-2">
+          Past Announcements
+        </h2>
+      )}
 
       {isLoading ? (
         <div className="p-8 text-center text-text-secondary text-sm">Loading announcements...</div>
