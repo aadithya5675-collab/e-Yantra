@@ -5,12 +5,14 @@ export type Priority = 'low' | 'medium' | 'high';
 
 export interface Profile {
   id: string;
-  username: string;
-  display_name: string;
-  role: Role;
-  must_change_password: boolean;
-  notifications_enabled: boolean;
-  created_at: string;
+  username?: string;
+  display_name?: string;
+  full_name?: string;
+  email?: string;
+  role: string;
+  must_change_password?: boolean;
+  notifications_enabled?: boolean;
+  created_at?: string;
 }
 
 export interface TeamEvent {

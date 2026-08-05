@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#ffffff" />
-    <title>Uvira-Apex</title>
+    <meta name="theme-color" content="#05070e" />
+    <meta name="description" content="ARC Mission Control — internal operations platform for the Aviation & Robotics Club e-Yantra teams." />
+    <title>ARC Mission Control</title>
     <script>
-      // Applied before first paint so the theme never flashes.
+      // ARC is dark-first (aerospace command centre). Opt into light only
+      // when explicitly chosen. Applied before first paint to avoid a flash.
       (function () {
-        var stored = localStorage.getItem('theme');
-        if (stored === 'dark') document.documentElement.classList.add('dark');
+        if (localStorage.getItem('theme') === 'light') document.documentElement.classList.add('light');
       })();
     </script>
   </head>

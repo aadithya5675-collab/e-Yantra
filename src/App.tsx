@@ -3,17 +3,23 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { Login } from './features/auth/Login';
+import { Signup } from './features/auth/Signup';
 import { ChangePassword } from './features/auth/ChangePassword';
 import { AppShell } from './app/AppShell';
 import { Loader } from './components/uiverse/Loader';
 
 // Route-level code splitting keeps the first paint light.
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+const LeaderboardPage = lazy(() => import('./features/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
+const AnnouncementsPage = lazy(() => import('./features/announcements/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage })));
+const EquipmentPage = lazy(() => import('./features/equipment/EquipmentPage').then(m => ({ default: m.EquipmentPage })));
 const EventsPage = lazy(() => import('./features/events/EventsPage').then(m => ({ default: m.EventsPage })));
 const EventDetail = lazy(() => import('./features/events/EventDetail').then(m => ({ default: m.EventDetail })));
 const MyTasks = lazy(() => import('./features/tasks/MyTasks').then(m => ({ default: m.MyTasks })));
 const ManageTasks = lazy(() => import('./features/tasks/ManageTasks').then(m => ({ default: m.ManageTasks })));
 const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
+// ARC Mission Control — single-theme team onboarding wizard.
+const OnboardingWizard = lazy(() => import('./features/onboarding/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,13 +62,22 @@ function App() {
           <Suspense fallback={<FullPageLoader />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <OnboardingWizard />
+                </ProtectedRoute>
+              } />
               <Route path="/" element={
                 <ProtectedRoute>
                   <AppShell />
                 </ProtectedRoute>
               }>
                 <Route index element={<Dashboard />} />
+                <Route path="leaderboard" element={<LeaderboardPage />} />
+                <Route path="announcements" element={<AnnouncementsPage />} />
+                <Route path="equipment" element={<EquipmentPage />} />
                 <Route path="events" element={<EventsPage />} />
                 <Route path="events/:id" element={<EventDetail />} />
                 <Route path="my-tasks" element={<MyTasks />} />

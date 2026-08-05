@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, ClipboardList, ListTodo, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Trophy, Megaphone, Cpu, Calendar, ClipboardList, ListTodo, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { AlarmManager } from '../components/AlarmManager';
 import { PageTransition } from '../components/motion/PageTransition';
@@ -15,6 +15,9 @@ export function AppShell() {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+    { name: 'Announcements', path: '/announcements', icon: Megaphone },
+    { name: 'Equipment', path: '/equipment', icon: Cpu },
     { name: 'Events', path: '/events', icon: Calendar },
     { name: 'My Tasks', path: '/my-tasks', icon: ClipboardList },
     ...(isAdmin ? [{ name: 'Manage Tasks', path: '/manage-tasks', icon: ListTodo }] : []),
@@ -65,13 +68,14 @@ export function AppShell() {
         key={item.name}
         to={item.path}
         onClick={onClick}
-        className={`gs-nav-item relative flex items-center gap-3 px-3 py-2 rounded-[10px] text-[14px] transition-colors duration-200 ${
+        className={`gs-nav-item relative flex items-center gap-3 px-3 py-2 text-[15px] font-bold transition-all duration-100 border-2 ${
           active
-            ? 'bg-accent-color/10 text-accent-color font-medium'
-            : 'text-text-secondary hover:bg-text-secondary/8 hover:text-text-primary'
+            ? 'bg-accent-color text-white border-black shadow-[2px_2px_0px_black] translate-x-[-2px] translate-y-[-2px]'
+            : 'border-transparent text-text-secondary hover:text-text-primary hover:bg-black/5'
         }`}
+        style={{ borderRadius: '5px' }}
       >
-        <Icon size={18} strokeWidth={active ? 2.2 : 1.9} />
+        <Icon size={18} strokeWidth={active ? 3 : 2} />
         {item.name}
       </Link>
     );
@@ -83,8 +87,9 @@ export function AppShell() {
 
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-5 h-14 bg-page/80 backdrop-blur-xl border-b border-hairline">
-        <span className="text-[17px] font-semibold tracking-[-0.02em] text-text-primary">
-          Uvira-Apex
+        <span className="text-[17px] font-semibold tracking-[-0.02em] text-text-primary flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          ARC Mission Control
         </span>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -111,9 +116,15 @@ export function AppShell() {
         className="hidden md:flex flex-col w-[232px] shrink-0 h-screen sticky top-0 border-r border-hairline bg-page"
       >
         <div className="px-5 pt-7 pb-8">
-          <span className="text-[19px] font-semibold tracking-[-0.022em] text-text-primary">
-            Uvira-Apex
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-[18px] font-bold tracking-tight text-text-primary">
+              ARC Mission Control
+            </span>
+          </div>
+          <p className="text-[11px] text-text-secondary mt-1 tracking-wide uppercase font-medium">
+            e-Yantra Operations
+          </p>
         </div>
 
         <div className="px-3 space-y-0.5 flex-1">
@@ -122,14 +133,14 @@ export function AppShell() {
 
         <div className="gs-nav-item px-5 py-5 border-t border-hairline">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-accent-color flex items-center justify-center text-white text-[13px] font-semibold shrink-0">
-              {profile?.display_name?.[0]?.toUpperCase() || 'U'}
+            <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400 text-[13px] font-semibold shrink-0">
+              {(profile?.full_name?.[0] || profile?.email?.[0] || 'A').toUpperCase()}
             </div>
             <div className="min-w-0">
-              <div className="text-[13px] font-medium text-text-primary truncate uppercase">
-                {profile?.display_name || 'User'}
+              <div className="text-[13px] font-medium text-text-primary truncate">
+                {profile?.full_name || profile?.email || 'User'}
               </div>
-              <div className="text-[11px] text-text-secondary capitalize">{profile?.role}</div>
+              <div className="text-[11px] text-text-secondary capitalize">{profile?.role || 'member'}</div>
             </div>
           </div>
         </div>

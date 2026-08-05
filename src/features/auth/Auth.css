@@ -1,0 +1,88 @@
+/* From Uiverse.io by ayyjayy2 */ 
+.brutalist-form {
+  --input-focus: #2d8cf0;
+  --font-color: #323232;
+  --font-color-sub: #666;
+  --bg-color: beige;
+  --main-color: black;
+  padding: 20px;
+  background: lightblue;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  box-shadow: 4px 4px var(--main-color);
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.brutalist-title {
+  color: var(--font-color);
+  font-weight: 900;
+  font-size: 20px;
+  margin-bottom: 25px;
+}
+
+.brutalist-title span {
+  color: var(--font-color-sub);
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.brutalist-input {
+  width: 100%;
+  height: 40px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--font-color);
+  padding: 5px 10px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.brutalist-input::placeholder {
+  color: var(--font-color-sub);
+  opacity: 0.8;
+}
+
+.brutalist-input:focus {
+  border: 2px solid var(--input-focus);
+}
+
+.brutalist-button-confirm {
+  margin: 20px auto 0 auto;
+  width: 100%;
+  height: 40px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--font-color);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.brutalist-button-confirm:active {
+  box-shadow: 0px 0px var(--main-color);
+  transform: translate(3px, 3px);
+}
+
+.brutalist-link {
+  color: var(--main-color);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-top: 10px;
+}

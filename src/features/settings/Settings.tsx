@@ -21,7 +21,7 @@ export function Settings() {
   }, []);
 
   useEffect(() => {
-    if (profile) setNotificationsEnabled(profile.notifications_enabled);
+    if (profile) setNotificationsEnabled(profile.notifications_enabled ?? true);
   }, [profile]);
 
   const toggleNotifications = async () => {

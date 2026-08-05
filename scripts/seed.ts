@@ -1,59 +1,66 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'http://localhost:54321';
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-if (!serviceRoleKey) {
-  console.error('SUPABASE_SERVICE_ROLE_KEY is required');
-  process.exit(1);
-}
+const supabaseUrl = process.env.SUPABASE_URL || 'https://arhbnjebavzqygenpuic.supabase.co';
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyaGJuamViYXZ6cXlnZW5wdWljIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTg5OTc3NywiZXhwIjoyMTAxNDc1Nzc3fQ.OPNtfRHEVj-Q-LRBjPoBzEzvgZDTQs7SRXN4hlCIN4U';
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const members = [
-  { username: 'aadithya', display_name: 'Aadithya', role: 'admin' },
-  { username: 'riswandh', display_name: 'Riswandh', role: 'admin' },
-  { username: 'devin', display_name: 'Devin', role: 'member' },
-  { username: 'mohish', display_name: 'Mohish', role: 'member' },
-] as const;
+const adminUser = {
+  username: 'uvira',
+  email: 'uvira@uvira-apex.team',
+  password: 'uvira@eyantra',
+  display_name: 'Uvira Admin',
+  role: 'admin',
+};
 
 async function seed() {
-  for (const m of members) {
-    const email = `${m.username}@uvira-apex.team`;
+  console.log(`Setting up single admin account: ${adminUser.username} (${adminUser.email})...`);
 
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password: '123456',
-      email_confirm: true,
-    });
+  const { data, error } = await supabase.auth.admin.createUser({
+    email: adminUser.email,
+    password: adminUser.password,
+    email_confirm: true,
+    user_metadata: { username: adminUser.username, display_name: adminUser.display_name, role: adminUser.role },
+  });
 
-    if (error) {
-      if (error.message.includes('already been registered')) {
-        console.log(`User ${m.username} already exists, skipping`);
-        continue;
+  let userId = data?.user?.id;
+
+  if (error) {
+    if (error.message.includes('already been registered')) {
+      console.log(`User ${adminUser.email} already registered, resetting password to ${adminUser.password}...`);
+      const { data: existingData } = await supabase.auth.admin.listUsers();
+      const existingUser = existingData?.users?.find(u => u.email === adminUser.email);
+      if (existingUser) {
+        userId = existingUser.id;
+        await supabase.auth.admin.updateUserById(userId, { password: adminUser.password });
       }
-      console.error(`Failed to create ${m.username}:`, error.message);
-      continue;
-    }
-
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: data.user.id,
-      username: m.username,
-      display_name: m.display_name,
-      role: m.role,
-      must_change_password: true,
-    });
-
-    if (profileError) {
-      console.error(`Failed to create profile for ${m.username}:`, profileError.message);
     } else {
-      console.log(`Created ${m.role}: ${m.username}`);
+      console.error(`Failed to create admin ${adminUser.email}:`, error.message);
+      process.exit(1);
     }
   }
 
-  console.log('\nSeed complete! All passwords are: 123456');
+  if (userId) {
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: userId,
+      username: adminUser.username,
+      display_name: adminUser.display_name,
+      role: adminUser.role,
+      must_change_password: false,
+    });
+
+    if (profileError) {
+      console.error(`Profile upsert info: ${profileError.message}`);
+    } else {
+      console.log(`✅ Admin profile created: ${adminUser.username}`);
+    }
+  }
+
+  console.log('\nSeed complete! Admin credentials:');
+  console.log(`  Username / Email: ${adminUser.email}`);
+  console.log(`  Password:         ${adminUser.password}`);
 }
 
 seed();

@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           id={generatedId}
           ref={ref}
-          className={twMerge('field', error && 'border-danger-color', className)}
+          className={twMerge('brutalist-input', error && 'border-red-500', className)}
           {...props}
         />
         {error && <span className="text-[12px] text-danger-color">{error}</span>}
