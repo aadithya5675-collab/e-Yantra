@@ -3,12 +3,18 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
-import './Auth.css';
+import { AuthLayout } from './AuthLayout';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
 const signupSchema = z.object({
   email: z.string().email('Enter a valid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters').regex(/^[a-zA-Z0-9_-]+$/, 'Only letters, numbers, _, and - allowed'),
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Only letters, numbers, _ and - allowed'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
@@ -17,6 +23,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 export function Signup() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -24,6 +31,7 @@ export function Signup() {
 
   const onSubmit = async (data: SignupFormData) => {
     setError(null);
+    setNotice(null);
 
     const { error: signUpError, data: authData } = await supabase.auth.signUp({
       email: data.email,
@@ -42,57 +50,67 @@ export function Signup() {
     } else if (authData.session) {
       navigate('/');
     } else {
-      // Just in case email confirmation was turned back on
-      setError('Account created! Please check your email.');
+      setNotice('Account created. Check your email to confirm, then sign in.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-      <form className="brutalist-form" onSubmit={handleSubmit(onSubmit)}>
-        <div className="brutalist-title">
-          Sign Up<br />
-          <span>create your team workspace account</span>
-        </div>
-
+    <AuthLayout
+      heading="Create account"
+      subheading="Register to join an ARC e-Yantra team."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link to="/login" className="text-accent-color font-medium hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {error && (
-          <div className="text-red-600 font-bold text-sm bg-red-100 p-2 rounded border-2 border-black w-full">
+          <div role="alert" className="flex items-center gap-2 text-[13px] text-danger-color bg-danger-color/12 border border-danger-color/25 rounded-lg px-3 py-2.5">
+            <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
         )}
+        {notice && (
+          <div role="status" className="flex items-center gap-2 text-[13px] text-success-color bg-success-color/12 border border-success-color/25 rounded-lg px-3 py-2.5">
+            <CheckCircle2 size={16} className="shrink-0" />
+            {notice}
+          </div>
+        )}
 
-        <input 
-          className="brutalist-input" 
-          placeholder="Enter your email" 
-          type="email" 
+        <Input
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@kpriet.ac.in"
+          error={errors.email?.message}
           {...register('email')}
         />
-        {errors.email && <span className="text-red-600 font-bold text-xs">{errors.email.message}</span>}
-
-        <input 
-          className="brutalist-input" 
-          placeholder="Choose a username" 
-          type="text" 
+        <Input
+          label="Username"
+          type="text"
+          autoComplete="username"
+          placeholder="e.g. arjun_r"
+          error={errors.username?.message}
           {...register('username')}
         />
-        {errors.username && <span className="text-red-600 font-bold text-xs">{errors.username.message}</span>}
-
-        <input 
-          className="brutalist-input" 
-          placeholder="Create a password" 
-          type="password" 
+        <Input
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="At least 6 characters"
+          hint="Use 6+ characters with a mix of letters and numbers."
+          error={errors.password?.message}
           {...register('password')}
         />
-        {errors.password && <span className="text-red-600 font-bold text-xs">{errors.password.message}</span>}
 
-        <button className="brutalist-button-confirm" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating...' : 'Register →'}
-        </button>
-
-        <Link to="/login" className="brutalist-link">
-          Already have an account? Log in
-        </Link>
+        <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
+          {isSubmitting ? 'Creating…' : 'Create account'}
+        </Button>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

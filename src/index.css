@@ -1,91 +1,448 @@
 @import "tailwindcss";
 
 /*
- * e-Yantra Brutalist Design System
- * Bold, high-contrast, flat colors, sharp edges.
+ * ARC Mission Control — unified design system.
+ * One semantic token layer, two explicit themes (data-theme="dark|light").
+ * Aerospace command-centre: calm, precise, technical. No brutalism.
  */
 
-@theme {
-  --color-page: var(--bg-page);
-  --color-surface: var(--bg-surface);
-  --color-elevated: var(--bg-elevated);
-  --color-panel: var(--bg-panel);
-  --color-primary-text: var(--text-primary);
-  --color-secondary-text: var(--text-secondary);
-  --color-muted-text: var(--text-muted);
-  --color-accent: var(--accent-color);
-  --color-hairline: var(--hairline);
+/* Dark theme toggling is driven by the [data-theme] attribute on <html>. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-  --font-sans: 'Inter', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  
-  --radius-sm: 5px;
-  --radius-md: 5px;
-  --radius-lg: 5px;
-  --radius-xl: 5px;
+@theme {
+  /* ---- Semantic colors (canonical names) ---------------------------- */
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-raised: var(--c-raised);
+  --color-muted: var(--c-muted);
+  --color-sidebar: var(--c-sidebar);
+
+  --color-hairline: var(--c-border);
+  --color-hairline-strong: var(--c-border-strong);
+  --color-focus: var(--c-focus);
+  --color-scrim: var(--c-scrim);
+
+  --color-text-primary: var(--c-text);
+  --color-text-secondary: var(--c-text-2);
+  --color-text-muted: var(--c-text-3);
+
+  --color-accent-color: var(--c-accent);
+  --color-accent-2: var(--c-accent-2);
+  --color-success-color: var(--c-success);
+  --color-warning-color: var(--c-warning);
+  --color-danger-color: var(--c-danger);
+  --color-info-color: var(--c-info);
+
+  /* ---- Aliases so every class already used in JSX resolves ---------- */
+  --color-page: var(--c-canvas);
+  --color-elevated: var(--c-raised);
+  --color-panel: var(--c-muted);
+  --color-primary-text: var(--c-text);
+  --color-secondary-text: var(--c-text-2);
+  --color-muted-text: var(--c-text-3);
+  --color-accent: var(--c-accent);
+  --color-danger: var(--c-danger);
+  --color-warning: var(--c-warning);
+  --color-success: var(--c-success);
+  --color-info: var(--c-info);
+
+  /* ---- Typography --------------------------------------------------- */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
+    Menlo, Consolas, monospace;
+
+  /* ---- Radius ------------------------------------------------------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+
+  /* ---- Motion ------------------------------------------------------- */
+  --ease-out-arc: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-arc: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* ====================================================================
+   Runtime theme palettes
+   ==================================================================== */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --c-canvas: #070b14;
+  --c-surface: #0d1523;
+  --c-raised: #121d2d;
+  --c-muted: #172337;
+  --c-sidebar: #090f1b;
+
+  --c-border: #26364d;
+  --c-border-strong: #35496a;
+  --c-focus: #22d3ee;
+  --c-scrim: rgb(3 6 12 / 0.72);
+
+  --c-text: #f4f7fb;
+  --c-text-2: #a8b4c7;
+  --c-text-3: #6b7a90;
+
+  --c-accent: #22d3ee;
+  --c-accent-2: #6d7cff;
+  --c-accent-contrast: #04121a;
+  --c-success: #34d399;
+  --c-warning: #fbbf24;
+  --c-danger: #fb7185;
+  --c-info: #38bdf8;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 8px 24px -8px rgb(0 0 0 / 0.55);
+  --shadow-3: 0 24px 60px -18px rgb(0 0 0 / 0.65);
+  --grid-opacity: 0.05;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  --c-canvas: #f3f6fa;
+  --c-surface: #ffffff;
+  --c-raised: #eaf0f6;
+  --c-muted: #e2eaf3;
+  --c-sidebar: #ffffff;
+
+  --c-border: #cbd5e1;
+  --c-border-strong: #94a3b8;
+  --c-focus: #0369a1;
+  --c-scrim: rgb(15 23 42 / 0.44);
+
+  --c-text: #0b1220;
+  --c-text-2: #526174;
+  --c-text-3: #7a8698;
+
+  --c-accent: #0369a1;
+  --c-accent-2: #3157d5;
+  --c-accent-contrast: #ffffff;
+  --c-success: #047857;
+  --c-warning: #b45309;
+  --c-danger: #be123c;
+  --c-info: #0369a1;
+
+  --shadow-1: 0 1px 2px rgb(15 23 42 / 0.08);
+  --shadow-2: 0 10px 26px -12px rgb(15 23 42 / 0.18);
+  --shadow-3: 0 24px 60px -20px rgb(15 23 42 / 0.22);
+  --grid-opacity: 0.04;
+}
+
+/*
+ * Back-compat aliases for legacy raw CSS var names referenced in a few inline
+ * styles. They point at the new --c-* runtime vars, so they re-resolve per
+ * theme automatically. Defined once — the cascade handles both themes.
+ */
+:root {
+  --accent-color: var(--c-accent);
+  --hairline: var(--c-border);
+  --text-primary: var(--c-text);
+  --text-secondary: var(--c-text-2);
+  --text-muted: var(--c-text-3);
+  --bg-page: var(--c-canvas);
+  --bg-surface: var(--c-surface);
+  --accent-contrast: var(--c-accent-contrast);
+}
+
+/* ====================================================================
+   Base
+   ==================================================================== */
 @layer base {
-  :root {
-    --bg-page: lightblue;
-    --bg-surface: beige;
-    --bg-elevated: #fff8e7; /* slightly lighter beige for elevated */
-    --bg-panel: lightblue;
-    --text-primary: #323232;
-    --text-secondary: #666666;
-    --text-muted: #888888;
-    --accent-color: #2d8cf0; /* blue focus color */
-    --hairline: black; /* thick borders */
+  *,
+  ::before,
+  ::after {
+    /* Theme-aware default border — replaces the old brutalist black rule. */
+    border-color: var(--c-border);
   }
 
-  /* Force brutalist global styles on elements that used border/shadow utility classes */
-  * {
-    border-color: var(--hairline);
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--c-border-strong) transparent;
   }
 
   body {
-    background-color: var(--bg-page);
-    color: var(--text-primary);
+    background-color: var(--c-canvas);
+    color: var(--c-text);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Override standard tailwind borders */
-  .border, .border-t, .border-r, .border-b, .border-l {
-    border-width: 2px;
-    border-style: solid;
-    border-color: black;
+  /* Consistent, visible focus ring across the app. */
+  :focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--c-accent) 32%, transparent);
+    color: var(--c-text);
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--c-text);
+    text-wrap: balance;
+  }
+
+  /* Numeric telemetry / codes read as mono, tight. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
   }
 }
 
-/* Base Brutalist Utilities */
-@layer utilities {
-  .brutalist-card {
-    background-color: var(--bg-surface);
-    border: 2px solid black;
-    border-radius: 5px;
-    box-shadow: 4px 4px 0px black;
-    transition: all 0.2s ease;
+/* ====================================================================
+   Components
+   ==================================================================== */
+@layer components {
+  /* ---- Surfaces ----------------------------------------------------- */
+  .surface-card {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
   }
-  
-  .brutalist-card:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px black;
+
+  .arc-panel {
+    background-color: var(--c-raised);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-2);
   }
-  
-  .brutalist-input {
+
+  .arc-elevated {
+    background-color: var(--c-raised);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-3);
+  }
+
+  /* Subtle command-grid backdrop for hero/auth areas. */
+  .arc-grid {
+    background-image:
+      linear-gradient(var(--c-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--c-border) 1px, transparent 1px);
+    background-size: 44px 44px;
+    opacity: var(--grid-opacity);
+  }
+
+  /* ---- Fields ------------------------------------------------------- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field-label {
+    font-size: 13px;
+    font-weight: 550;
+    color: var(--c-text-2);
+    letter-spacing: 0.01em;
+  }
+
+  .arc-input {
     width: 100%;
-    height: 40px;
-    border-radius: 5px;
-    border: 2px solid black;
-    background-color: var(--bg-surface);
-    box-shadow: 4px 4px black;
+    min-height: 44px;
+    padding: 10px 13px;
     font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-    padding: 5px 10px;
+    color: var(--c-text);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-md);
+    transition: border-color 0.16s var(--ease-out-arc),
+      box-shadow 0.16s var(--ease-out-arc), background-color 0.16s;
     outline: none;
-    transition: all 0.2s ease;
   }
-  
-  .brutalist-input:focus {
-    border: 2px solid var(--accent-color);
+  .arc-input::placeholder { color: var(--c-text-3); }
+  .arc-input:hover { border-color: var(--c-border-strong); }
+  .arc-input:focus,
+  .arc-input:focus-visible {
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-accent) 26%, transparent);
+    outline: none;
+  }
+  .arc-input[aria-invalid="true"] {
+    border-color: var(--c-danger);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-danger) 22%, transparent);
+  }
+
+  /* ---- Buttons ------------------------------------------------------ */
+  /* Variants carry the base layout too, so a bare `btn-primary` (no `btn`)
+     is still fully styled. */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.12s var(--ease-out-arc),
+      background-color 0.16s, border-color 0.16s, box-shadow 0.16s, color 0.16s;
+  }
+  .btn:active { transform: translateY(1px) scale(0.99); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-sm { min-height: 36px; padding: 0 13px; font-size: 13.5px; border-radius: var(--radius-sm); }
+  .btn-lg { min-height: 50px; padding: 0 24px; font-size: 16px; }
+
+  .btn-primary {
+    background-color: var(--c-accent);
+    color: var(--c-accent-contrast);
+    box-shadow: var(--shadow-1);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-accent) 88%, white);
+    box-shadow: 0 6px 18px -6px color-mix(in oklab, var(--c-accent) 60%, transparent);
+  }
+
+  .btn-secondary {
+    background-color: var(--c-muted);
+    color: var(--c-text);
+    border-color: var(--c-border);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-muted) 82%, var(--c-text));
+    border-color: var(--c-border-strong);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--c-text-2);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-text) 8%, transparent);
+    color: var(--c-text);
+  }
+
+  .btn-danger {
+    background-color: var(--c-danger);
+    color: #fff;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: color-mix(in oklab, var(--c-danger) 88%, black);
+  }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    color: var(--c-text-2);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.16s, color 0.16s, border-color 0.16s;
+  }
+  .icon-btn:hover {
+    background-color: color-mix(in oklab, var(--c-text) 8%, transparent);
+    color: var(--c-text);
+  }
+
+  /* ---- Chips & badges ---------------------------------------------- */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    font-size: 13px;
+    font-weight: 550;
+    border-radius: 999px;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-2);
+    background-color: var(--c-surface);
+    cursor: pointer;
+    transition: all 0.16s var(--ease-out-arc);
+  }
+  .chip:hover { border-color: var(--c-border-strong); color: var(--c-text); }
+  .chip[aria-selected="true"],
+  .chip[data-active="true"] {
+    background-color: color-mix(in oklab, var(--c-accent) 16%, var(--c-surface));
+    border-color: var(--c-accent);
+    color: var(--c-text);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+    border: 1px solid var(--c-border);
+    color: var(--c-text-2);
+    background-color: var(--c-muted);
+  }
+  .badge-accent  { color: var(--c-accent);  background: color-mix(in oklab, var(--c-accent) 14%, transparent);  border-color: color-mix(in oklab, var(--c-accent) 40%, transparent); }
+  .badge-success { color: var(--c-success); background: color-mix(in oklab, var(--c-success) 14%, transparent); border-color: color-mix(in oklab, var(--c-success) 40%, transparent); }
+  .badge-warning { color: var(--c-warning); background: color-mix(in oklab, var(--c-warning) 16%, transparent); border-color: color-mix(in oklab, var(--c-warning) 42%, transparent); }
+  .badge-danger  { color: var(--c-danger);  background: color-mix(in oklab, var(--c-danger) 15%, transparent);  border-color: color-mix(in oklab, var(--c-danger) 42%, transparent); }
+
+  /* ---- Skeleton ----------------------------------------------------- */
+  .skeleton {
+    background: linear-gradient(
+      100deg,
+      var(--c-muted) 30%,
+      color-mix(in oklab, var(--c-muted) 60%, var(--c-text-3)) 50%,
+      var(--c-muted) 70%
+    );
+    background-size: 200% 100%;
+    animation: arc-shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius-md);
+  }
+  @keyframes arc-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@keyframes arc-toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes arc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes arc-dialog-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes arc-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Respect reduced motion globally as a safety net. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase/client';
-import { Button } from './uiverse/Button';
+import { Button } from './ui/Button';
 import type { Task } from '../types';
 import { BellRing } from 'lucide-react';
 import { gsap, useGSAP, EASE } from '../lib/motion';
@@ -118,7 +118,12 @@ export function AlarmModal({ task, onDismiss }: AlarmModalProps) {
     <div ref={scope} className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="gs-scrim absolute inset-0 bg-black/50 backdrop-blur-sm" />
 
-      <div className="gs-panel relative w-full max-w-[400px] bg-page border border-hairline rounded-[22px] p-8 text-center">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="alarm-title"
+        className="gs-panel relative w-full max-w-[400px] arc-elevated p-8 text-center"
+      >
         <div className="relative w-14 h-14 mx-auto mb-5">
           <span className="gs-halo absolute inset-0 rounded-full bg-danger-color/25" />
           <span className="relative flex items-center justify-center w-14 h-14 rounded-full bg-danger-color/12">
@@ -126,7 +131,7 @@ export function AlarmModal({ task, onDismiss }: AlarmModalProps) {
           </span>
         </div>
 
-        <h2 className="text-[24px] font-semibold tracking-[-0.02em] text-text-primary">
+        <h2 id="alarm-title" className="text-[22px] font-semibold tracking-[-0.02em] text-text-primary">
           Task overdue
         </h2>
         <p className="mt-2 mb-7 text-[15px] leading-relaxed text-text-secondary">
@@ -140,13 +145,14 @@ export function AlarmModal({ task, onDismiss }: AlarmModalProps) {
           </Button>
         ) : (
           <form onSubmit={handleSubmit} className="text-left">
-            <label className="block text-[13px] font-medium text-text-secondary mb-2">
+            <label htmlFor="alarm-reason" className="block text-[13px] font-medium text-text-secondary mb-2">
               What held this up?
             </label>
             <textarea
+              id="alarm-reason"
               autoFocus
               required
-              className="field text-[14px] resize-none mb-4"
+              className="arc-input text-[14px] resize-none mb-4"
               rows={3}
               placeholder="A short explanation…"
               value={reason}

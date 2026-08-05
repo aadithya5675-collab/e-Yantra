@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, Users, LayoutGrid } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { Reveal } from '../../components/motion/Reveal';
 import { AnimatedNumber } from '../../components/motion/AnimatedNumber';
-import { Loader } from '../../components/uiverse/Loader';
+import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState, ErrorState } from '../../components/ui/primitives';
 
-// Same standing interface
 interface Standing {
   team_id: number;
   team_name: string;
@@ -15,17 +17,20 @@ interface Standing {
 
 export function Dashboard() {
   const { profile } = useAuth();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-teams'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('teams').select('id, name, official_eyantra_id, theme:themes(id, name, slug)');
+      const { data, error } = await supabase
+        .from('teams')
+        .select('id, name, official_eyantra_id, theme:themes(id, name, slug)');
       if (error) throw error;
       return (data || []).map((t: any) => ({
         team_id: t.id,
         team_name: t.name,
         arc_code: t.official_eyantra_id || 'N/A',
-        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme
+        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
       }));
     },
   });
@@ -33,18 +38,13 @@ export function Dashboard() {
   const teams = data || [];
   const totalTeams = teams.length;
 
-  // Group teams by theme
   const themesMap = new Map<string, Standing[]>();
   teams.forEach(team => {
-    // If a team doesn't have a theme yet, we group them under 'Unassigned'
     const themeName = team.theme?.name || 'Unassigned';
-    if (!themesMap.has(themeName)) {
-      themesMap.set(themeName, []);
-    }
+    if (!themesMap.has(themeName)) themesMap.set(themeName, []);
     themesMap.get(themeName)!.push(team);
   });
 
-  // Convert map to array and sort by theme name
   const themeGroups = Array.from(themesMap.entries())
     .map(([name, themeTeams]) => ({
       name,
@@ -57,87 +57,94 @@ export function Dashboard() {
       return a.name.localeCompare(b.name);
     });
 
-  if (isLoading) {
-    return (
-      <div className="py-20 flex justify-center">
-        <Loader />
-      </div>
-    );
-  }
+  const toggle = (name: string) =>
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
 
-  if (isError) {
-    return (
-      <div className="p-8 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm text-center">
-        Unable to load dashboard data.
-      </div>
-    );
-  }
+  if (isLoading) return <div className="py-20 flex justify-center"><Spinner size={32} /></div>;
+  if (isError) return <ErrorState description="Unable to load dashboard data." onRetry={() => refetch()} />;
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-12">
-      {/* Header */}
-      <Reveal className="mb-8" y={20}>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-text-primary uppercase mb-2">
-          Admin Dashboard
-        </h1>
-        <p className="text-[17px] text-text-secondary max-w-lg">
-          Welcome back, {profile?.display_name}. Here is the global team overview.
+    <div className="space-y-8">
+      <Reveal y={16}>
+        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Command centre</h1>
+        <p className="mt-1 text-[14.5px] text-text-secondary">
+          Welcome back, {profile?.display_name}. Global overview across all seven themes.
         </p>
       </Reveal>
 
-      {/* Total Teams Counter */}
-      <Reveal className="bg-accent-color border-4 border-black p-8 sm:p-12 shadow-[8px_8px_0px_black] rounded-xl flex flex-col items-center justify-center text-center">
-        <p className="text-xl sm:text-2xl font-bold uppercase tracking-widest text-black mb-2 opacity-90">
-          Total Teams
-        </p>
-        <AnimatedNumber
-          value={totalTeams}
-          className="block text-7xl sm:text-8xl font-black tracking-tighter text-white drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]"
-        />
+      {/* Overview stats */}
+      <Reveal className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <StatTile icon={<Users size={16} />} label="Total teams" value={totalTeams} />
+        <StatTile icon={<LayoutGrid size={16} />} label="Active themes" value={themeGroups.filter(g => g.name !== 'Unassigned').length} />
+        <StatTile icon={<Users size={16} />} label="Unassigned" value={themesMap.get('Unassigned')?.length ?? 0} muted />
       </Reveal>
 
-      {/* Themes Grid */}
+      {/* Teams by theme */}
       <Reveal>
-        <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary mb-6">
-          Teams by Theme
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {themeGroups.map((group) => (
-            <div 
-              key={group.name} 
-              className="group relative bg-surface border-4 border-black p-6 shadow-[6px_6px_0px_black] rounded-xl hover:translate-y-[-4px] hover:shadow-[10px_10px_0px_black] transition-all duration-300"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-bold text-text-primary uppercase leading-tight pr-4">
-                  {group.name}
-                </h3>
-                <span className="bg-black text-white px-3 py-1 text-xl font-black rounded-lg">
-                  {group.count}
-                </span>
-              </div>
-              
-              {/* Tooltip / Expandable list on Hover */}
-              <div className="absolute left-0 top-full mt-4 w-full bg-page border-4 border-black p-4 rounded-xl shadow-[8px_8px_0px_black] z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 max-h-[300px] overflow-y-auto">
-                <h4 className="text-xs font-bold text-text-secondary uppercase mb-3 border-b-2 border-black pb-2">
-                  Enrolled Teams ({group.count})
-                </h4>
-                {group.count > 0 ? (
-                  <ul className="space-y-2">
-                    {group.teams.map(t => (
-                      <li key={t.team_id} className="text-sm font-semibold text-text-primary bg-surface-muted px-3 py-2 rounded-lg border-2 border-transparent hover:border-black transition-colors flex justify-between items-center">
-                        <span className="truncate">{t.team_name}</span>
-                        <span className="text-[10px] bg-accent-color text-white px-2 py-0.5 rounded-full ml-2 shrink-0">{t.arc_code}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-text-secondary italic">No teams enrolled yet.</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted mb-3">Teams by theme</h2>
+        {themeGroups.length === 0 ? (
+          <EmptyState icon={<Users size={30} />} title="No teams yet" description="Teams appear here as leaders complete onboarding." />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {themeGroups.map(group => {
+              const isOpen = expanded.has(group.name);
+              const panelId = `theme-${group.name.replace(/\s+/g, '-')}`;
+              return (
+                <div key={group.name} className="surface-card overflow-hidden p-0">
+                  <button
+                    onClick={() => toggle(group.name)}
+                    aria-expanded={isOpen}
+                    aria-controls={panelId}
+                    className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/40 transition-colors"
+                  >
+                    <span className="flex items-center gap-3 min-w-0">
+                      <span className="badge badge-accent tabular">{group.count}</span>
+                      <span className="font-medium text-text-primary truncate">{group.name}</span>
+                    </span>
+                    <ChevronDown
+                      size={18}
+                      className="text-text-muted shrink-0 transition-transform"
+                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div id={panelId} className="px-4 pb-4 pt-1 border-t border-hairline">
+                      {group.count > 0 ? (
+                        <ul className="space-y-1.5 mt-3">
+                          {group.teams.map(t => (
+                            <li key={t.team_id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40">
+                              <span className="text-[13.5px] text-text-primary truncate">{t.team_name}</span>
+                              <span className="badge tabular shrink-0">{t.arc_code}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[13px] text-text-muted mt-3">No teams enrolled yet.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Reveal>
+    </div>
+  );
+}
+
+function StatTile({ icon, label, value, muted }: { icon: React.ReactNode; label: string; value: number; muted?: boolean }) {
+  return (
+    <div className="surface-card p-4">
+      <div className={`flex items-center gap-1.5 text-[12px] font-medium ${muted ? 'text-text-muted' : 'text-text-secondary'}`}>
+        {icon}{label}
+      </div>
+      <AnimatedNumber value={value} className="block mt-2 text-[30px] font-semibold tracking-tight text-text-primary tabular" />
     </div>
   );
 }

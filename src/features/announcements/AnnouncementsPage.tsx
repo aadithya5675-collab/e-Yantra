@@ -1,8 +1,13 @@
 import { useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Megaphone, Pin, CheckCircle, Clock } from 'lucide-react';
+import { Megaphone, Pin, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
+import { useAuth } from '../auth/AuthContext';
+import { CreateAnnouncement } from './CreateAnnouncement';
+import { Button } from '../../components/ui/Button';
+import { Badge, EmptyState, Skeleton } from '../../components/ui/primitives';
+import { useToast } from '../../components/ui/Toast';
 
 interface Announcement {
   id: number;
@@ -16,26 +21,21 @@ interface Announcement {
   acknowledgements: Array<{ profile_id: number }>;
 }
 
-import { useAuth } from '../auth/AuthContext';
-import { CreateAnnouncement } from './CreateAnnouncement';
-
 export function AnnouncementsPage() {
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeId, isAdmin } = useAuth();
+  const { toast } = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: ['announcements', themeId],
     queryFn: async () => {
       let query = supabase.from('announcements').select('*');
-      
-      // If not admin and they have a theme, show theme-specific + global announcements
       if (!isAdmin && themeId) {
         query = query.or(`theme_id.eq.${themeId},theme_id.is.null`);
       }
-
       const { data, error } = await query;
-      if (error && error.code !== '42P01' && error.code !== '42703') throw error; // Ignore table missing or column missing
+      if (error && error.code !== '42P01' && error.code !== '42703') throw error;
       return { data: (data || []) as Announcement[] };
     },
   });
@@ -44,13 +44,17 @@ export function AnnouncementsPage() {
     mutationFn: async (id: number) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
-      const { error } = await supabase.from('announcement_acknowledgements').insert([{ announcement_id: id, profile_id: userData.user.id }]);
+      const { error } = await supabase
+        .from('announcement_acknowledgements')
+        .insert([{ announcement_id: id, profile_id: userData.user.id }]);
       if (error && error.code !== '42P01') throw error;
       return {};
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      toast('Acknowledged', 'success');
     },
+    onError: () => toast('Could not acknowledge', 'error'),
   });
 
   useGSAP(
@@ -72,88 +76,68 @@ export function AnnouncementsPage() {
   const list = data?.data || [];
 
   return (
-    <div ref={containerRef} className="space-y-6 max-w-4xl mx-auto">
-      <div className="border-b border-hairline pb-4 mb-8">
+    <div ref={containerRef} className="space-y-6">
+      <div>
         <div className="flex items-center gap-2.5">
-          <Megaphone className="w-6 h-6 text-cyan-400" />
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-            Club Announcements
-          </h1>
+          <Megaphone size={22} className="text-accent-color" />
+          <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Announcements</h1>
         </div>
-        <p className="text-sm text-text-secondary mt-1">
-          Official communications, guidelines, and competition deadlines from ARC lead engineers
+        <p className="text-[14px] text-text-secondary mt-1">
+          Official communications, guidelines and deadlines from ARC leads.
         </p>
       </div>
 
       {isAdmin && <CreateAnnouncement />}
 
-      {isAdmin && (
-        <h2 className="text-xl font-bold uppercase tracking-tight text-text-primary mb-4 mt-12 border-b border-hairline pb-2">
-          Past Announcements
-        </h2>
+      {isAdmin && list.length > 0 && (
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted pt-2">Posted</h2>
       )}
 
       {isLoading ? (
-        <div className="p-8 text-center text-text-secondary text-sm">Loading announcements...</div>
-      ) : list.length === 0 ? (
-        <div className="p-12 text-center border border-hairline rounded-xl bg-surface-muted/30">
-          <Clock className="w-10 h-10 text-text-secondary mx-auto mb-2 opacity-50" />
-          <p className="text-sm text-text-secondary">No active announcements at this time.</p>
+        <div className="space-y-3">
+          {[0, 1].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
+      ) : list.length === 0 ? (
+        <EmptyState icon={<Megaphone size={30} />} title="No announcements" description="New announcements will appear here." />
       ) : (
-        <div className="space-y-4">
-          {list.map((item) => {
+        <div className="space-y-3">
+          {list.map(item => {
             const isAcked = item.acknowledgements && item.acknowledgements.length > 0;
             return (
-              <div
+              <article
                 key={item.id}
-                className={`gs-announcement-card p-6 rounded-2xl border transition-all ${
-                  item.is_pinned
-                    ? 'bg-cyan-500/5 border-cyan-500/30 shadow-lg shadow-cyan-500/5'
-                    : 'bg-surface-muted/40 border-hairline'
-                }`}
+                className={`gs-announcement-card surface-card p-5 ${item.is_pinned ? 'border-accent-color/40' : ''}`}
+                style={item.is_pinned ? { background: 'color-mix(in oklab, var(--c-accent) 6%, var(--c-surface))' } : undefined}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {item.is_pinned && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-400 uppercase tracking-wider bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">
-                          <Pin className="w-3 h-3" /> Pinned
-                        </span>
-                      )}
-                      <h3 className="text-lg font-semibold text-text-primary">{item.title}</h3>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {item.is_pinned && <Badge tone="accent"><Pin size={12} /> Pinned</Badge>}
+                      <h3 className="text-[16px] font-semibold text-text-primary">{item.title}</h3>
                     </div>
-                    <p className="text-xs text-text-secondary">
-                      By {item.creator?.full_name || 'ARC Lead'} • {new Date(item.created_at).toLocaleDateString()}
+                    <p className="text-[12.5px] text-text-muted mt-1">
+                      By {item.creator?.full_name || 'ARC Lead'} · {new Date(item.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-4 text-sm text-text-primary/90 whitespace-pre-line leading-relaxed">
+                <div className="mt-3 text-[14px] text-text-secondary whitespace-pre-line leading-relaxed">
                   {item.content}
                 </div>
 
                 {item.requires_acknowledgement && (
-                  <div className="mt-5 pt-4 border-t border-hairline flex items-center justify-between">
-                    <span className="text-xs text-text-secondary">
-                      Acknowledgement required by all team members
-                    </span>
+                  <div className="mt-4 pt-4 border-t border-hairline flex items-center justify-between gap-3 flex-wrap">
+                    <span className="text-[12.5px] text-text-muted">Acknowledgement required from all members</span>
                     {isAcked ? (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/30">
-                        <CheckCircle className="w-3.5 h-3.5" /> Acknowledged
-                      </span>
+                      <Badge tone="success"><CheckCircle size={13} /> Acknowledged</Badge>
                     ) : (
-                      <button
-                        onClick={() => ackMutation.mutate(item.id)}
-                        disabled={ackMutation.isPending}
-                        className="px-4 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold rounded-lg border border-cyan-400/40 transition-all disabled:opacity-50"
-                      >
-                        Confirm Read & Acknowledge
-                      </button>
+                      <Button size="sm" variant="secondary" loading={ackMutation.isPending} onClick={() => ackMutation.mutate(item.id)}>
+                        <CheckCircle size={15} /> Acknowledge
+                      </Button>
                     )}
                   </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>

@@ -2,23 +2,24 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { supabase } from '../../lib/supabase/client';
 import { Input } from '../../components/ui/Input';
-import { Button } from '../../components/uiverse/Button';
+import { Button } from '../../components/ui/Button';
+import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState } from '../../components/ui/primitives';
+import { useToast } from '../../components/ui/Toast';
+import { useTheme } from '../../lib/theme';
 import { Reveal } from '../../components/motion/Reveal';
-import { LogOut, Moon, Sun, Key, Bell, BellOff } from 'lucide-react';
+import { LogOut, Moon, Sun, Key, Bell, BellOff, Users, UserPlus, Palette } from 'lucide-react';
 
 export function Settings() {
   const { profile, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(profile?.notifications_enabled ?? true);
-
-  useEffect(() => {
-    setIsDarkMode(document.documentElement.classList.contains('dark'));
-  }, []);
 
   useEffect(() => {
     if (profile) setNotificationsEnabled(profile.notifications_enabled ?? true);
@@ -35,183 +36,156 @@ export function Settings() {
     if (error) {
       console.error(error);
       setNotificationsEnabled(!newVal);
+      toast('Could not update notifications', 'error');
+    } else {
+      toast(newVal ? 'Notifications on' : 'Notifications off', 'success');
     }
-  };
-
-  const toggleTheme = () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    setIsDarkMode(isDark);
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage('');
     setError('');
-
     if (password.length < 6) { setError('At least 6 characters'); return; }
     if (password !== confirm) { setError('Passwords do not match'); return; }
 
+    setSavingPassword(true);
     const { error: err } = await supabase.auth.updateUser({ password });
+    setSavingPassword(false);
     if (err) { setError(err.message); return; }
 
     setPassword('');
     setConfirm('');
     setIsChangingPassword(false);
-    setMessage('Password updated.');
+    toast('Password updated', 'success');
   };
 
+  const roleLabel = profile?.is_leader ? 'Team Leader' : profile?.role === 'admin' ? 'Admin' : 'Team Member';
+
   return (
-    <div className="max-w-[560px] mx-auto">
-      <Reveal className="mb-12" y={20}>
-        <h1 className="text-[40px] leading-[1.08] font-semibold tracking-[-0.028em] text-text-primary">
-          Settings
-        </h1>
-        <p className="mt-2 text-[17px] text-text-secondary">
-          {profile?.display_name} · <span className="capitalize">{profile?.is_leader ? 'Team Leader' : profile?.role === 'admin' ? 'Admin' : 'Team Member'}</span>
+    <div className="max-w-2xl mx-auto">
+      <Reveal className="mb-8" y={16}>
+        <h1 className="text-[26px] font-semibold tracking-tight text-text-primary">Settings</h1>
+        <p className="mt-1 text-[14.5px] text-text-secondary">
+          {profile?.display_name} · {roleLabel}
         </p>
       </Reveal>
 
-      <Reveal className="space-y-3">
-        <Row
-          title="Notifications"
-          detail="Task alarms and reminders"
-          action={
-            <Button variant="secondary" size="sm" onClick={toggleNotifications}>
-              {notificationsEnabled ? <Bell size={14} /> : <BellOff size={14} />}
-              {notificationsEnabled ? 'On' : 'Off'}
-            </Button>
-          }
-        />
-
-        <Row
-          title="Appearance"
-          detail={isDarkMode ? 'Dark' : 'Light'}
-          action={
-            <Button variant="secondary" size="sm" onClick={toggleTheme}>
-              {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
-              {isDarkMode ? 'Light' : 'Dark'}
-            </Button>
-          }
-        />
-
-        <div className="surface-card p-6">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-[15px] font-medium text-text-primary">Password</p>
-              <p className="text-[13px] text-text-secondary mt-0.5">
-                {message || 'Update your account password'}
-              </p>
-            </div>
-            {!isChangingPassword && (
-              <Button variant="secondary" size="sm" onClick={() => { setIsChangingPassword(true); setMessage(''); }}>
-                <Key size={14} /> Change
+      <Reveal className="space-y-8">
+        {/* Appearance */}
+        <Section title="Appearance" icon={<Palette size={16} />}>
+          <Row
+            title="Theme"
+            detail={theme === 'dark' ? 'Dark — aerospace command centre' : 'Light — daytime operations'}
+            action={
+              <Button variant="secondary" size="sm" onClick={toggleTheme}>
+                {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                {theme === 'dark' ? 'Light' : 'Dark'}
               </Button>
+            }
+          />
+        </Section>
+
+        {/* Notifications */}
+        <Section title="Notifications" icon={<Bell size={16} />}>
+          <Row
+            title="Task alarms & reminders"
+            detail={notificationsEnabled ? 'Enabled' : 'Disabled'}
+            action={
+              <Button variant="secondary" size="sm" onClick={toggleNotifications}>
+                {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
+                {notificationsEnabled ? 'On' : 'Off'}
+              </Button>
+            }
+          />
+        </Section>
+
+        {/* Security */}
+        <Section title="Security" icon={<Key size={16} />}>
+          <div className="surface-card p-5">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-[15px] font-medium text-text-primary">Password</p>
+                <p className="text-[13px] text-text-secondary mt-0.5">Update your account password</p>
+              </div>
+              {!isChangingPassword && (
+                <Button variant="secondary" size="sm" onClick={() => setIsChangingPassword(true)}>
+                  <Key size={15} /> Change
+                </Button>
+              )}
+            </div>
+
+            {isChangingPassword && (
+              <form className="space-y-4 mt-5 pt-5 border-t border-hairline" onSubmit={handleChangePassword}>
+                {error && <p role="alert" className="text-[13px] text-danger-color">{error}</p>}
+                <Input label="New password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
+                <Input label="Confirm password" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+                <div className="flex gap-3 pt-1">
+                  <Button type="submit" size="sm" loading={savingPassword}>Update password</Button>
+                  <Button type="button" variant="ghost" size="sm"
+                    onClick={() => { setIsChangingPassword(false); setError(''); setPassword(''); setConfirm(''); }}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
             )}
           </div>
+        </Section>
 
-          {isChangingPassword && (
-            <form className="space-y-4 mt-6 pt-6 border-t border-hairline" onSubmit={handleChangePassword}>
-              {error && <p className="text-[13px] text-danger-color">{error}</p>}
-              <Input
-                label="New Password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-              />
-              <Input
-                label="Confirm Password"
-                type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-              />
-              <div className="flex gap-3 pt-1">
-                <Button type="submit" size="sm">Update</Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => { setIsChangingPassword(false); setError(''); setPassword(''); setConfirm(''); }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        <div className="pt-6">
-          <Button variant="danger" onClick={signOut} className="w-full">
-            <LogOut size={15} /> Sign Out
-          </Button>
-        </div>
-
-        {profile?.is_leader && (
-          <div className="pt-8">
-            <TeamManagement teamId={profile.team_id!} />
-          </div>
+        {/* Team management (leaders only) */}
+        {profile?.is_leader && profile.team_id && (
+          <Section title="Team management" icon={<Users size={16} />}>
+            <TeamManagement teamId={profile.team_id} />
+          </Section>
         )}
+
+        {/* Account */}
+        <Section title="Account">
+          <Button variant="danger" onClick={signOut} className="w-full sm:w-auto">
+            <LogOut size={16} /> Sign out
+          </Button>
+        </Section>
       </Reveal>
     </div>
   );
 }
 
 function TeamManagement({ teamId }: { teamId: number }) {
+  const { toast } = useToast();
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMembers = async () => {
     setLoading(true);
-    // Fetch members who have no team and are not leaders
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .is('team_id', null);
-      
-    if (error) {
-      console.error("Error fetching members:", error);
-    }
-      
-    // Filter out leaders (could be false or null) and admins
+    const { data, error } = await supabase.from('profiles').select('*').is('team_id', null);
+    if (error) console.error('Error fetching members:', error);
     setMembers(data?.filter(p => !p.is_leader && p.role !== 'admin') || []);
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
+  useEffect(() => { fetchMembers(); }, []);
 
   const addMember = async (userId: string) => {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ team_id: teamId })
-      .eq('id', userId);
-      
-    if (!error) {
-      fetchMembers();
-    }
+    const { error } = await supabase.from('profiles').update({ team_id: teamId }).eq('id', userId);
+    if (!error) { toast('Member added to your team', 'success'); fetchMembers(); }
+    else toast('Could not add member', 'error');
   };
 
   return (
-    <div className="surface-card p-6">
-      <div className="mb-6">
-        <p className="text-[17px] font-semibold text-text-primary">Team Management</p>
-        <p className="text-[13px] text-text-secondary mt-1">Select available members to join your team.</p>
-      </div>
-
+    <div className="surface-card p-5">
+      <p className="text-[13px] text-text-secondary mb-4">Add available members to your team.</p>
       {loading ? (
-        <p className="text-sm text-text-secondary">Loading available members...</p>
+        <div className="flex items-center gap-3 text-sm text-text-secondary"><Spinner size={18} /> Loading available members…</div>
       ) : members.length === 0 ? (
-        <p className="text-sm text-text-secondary">No available members found. Everyone is currently assigned to a team.</p>
+        <EmptyState icon={<Users size={28} />} title="No available members" description="Everyone is currently assigned to a team." />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {members.map(member => (
-            <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-hairline bg-page/50">
-              <div>
-                <p className="text-sm font-medium text-text-primary">{member.display_name || member.full_name || member.username}</p>
-                <p className="text-xs text-text-secondary">{member.email}</p>
+            <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-hairline bg-muted/40">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">{member.display_name || member.full_name || member.username}</p>
+                <p className="text-xs text-text-muted truncate">{member.email}</p>
               </div>
-              <Button size="sm" onClick={() => addMember(member.id)}>Add to Team</Button>
+              <Button size="sm" onClick={() => addMember(member.id)}><UserPlus size={15} /> Add</Button>
             </div>
           ))}
         </div>
@@ -220,17 +194,20 @@ function TeamManagement({ teamId }: { teamId: number }) {
   );
 }
 
-function Row({
-  title,
-  detail,
-  action,
-}: {
-  title: string;
-  detail: string;
-  action: React.ReactNode;
-}) {
+function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="surface-card p-6 flex items-center justify-between gap-4 flex-wrap">
+    <section>
+      <h2 className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-text-muted mb-3">
+        {icon}{title}
+      </h2>
+      <div className="space-y-3">{children}</div>
+    </section>
+  );
+}
+
+function Row({ title, detail, action }: { title: string; detail: string; action: React.ReactNode }) {
+  return (
+    <div className="surface-card p-5 flex items-center justify-between gap-4 flex-wrap">
       <div>
         <p className="text-[15px] font-medium text-text-primary">{title}</p>
         <p className="text-[13px] text-text-secondary mt-0.5">{detail}</p>

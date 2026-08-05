@@ -1,41 +1,58 @@
-import { useState, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 import { useAuth } from '../auth/AuthContext';
-import { ThemeWheel } from '../../components/uiverse/ThemeWheel';
-import { Loader } from '../../components/uiverse/Loader';
+import { Spinner } from '../../components/ui/Spinner';
+import { EmptyState, ErrorState } from '../../components/ui/primitives';
+
+const FALLBACK_THEMES = [
+  { id: '1', name: 'Logic Quest' },
+  { id: '2', name: 'Khoj-o-Drone' },
+  { id: '3', name: 'Strata Cobot' },
+  { id: '4', name: 'Hola The Explorer' },
+  { id: '5', name: 'Niti Vahan' },
+  { id: '6', name: 'Echo Balancer' },
+  { id: '7', name: 'PacBot' },
+];
 
 export function LeaderboardPage() {
   const { themeId, isAdmin } = useAuth();
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(themeId ? themeId.toString() : '1');
+  const [selectedTheme, setSelectedTheme] = useState<string>(themeId ? themeId.toString() : '1');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // If user is not admin, force them to see their own theme's leaderboard
-  const activeThemeId = isAdmin ? selectedTheme : (themeId?.toString() || '1');
+  // Non-admins always see their own theme's leaderboard.
+  const activeThemeId = isAdmin ? selectedTheme : themeId?.toString() || '1';
 
-  const { data, isLoading, isError } = useQuery({
+  const { data: themes = FALLBACK_THEMES } = useQuery({
+    queryKey: ['themes-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('themes').select('id, name').order('id');
+      if (error || !data?.length) return FALLBACK_THEMES;
+      return data.map((t: any) => ({ id: String(t.id), name: t.name }));
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['leaderboard', activeThemeId],
     queryFn: async () => {
-      let query = supabase.from('teams').select('id, name, official_eyantra_id, status, created_by, theme:themes!inner(id, name, slug)');
-      
-      if (activeThemeId) {
-        query = query.eq('theme_id', activeThemeId);
-      }
-
+      let query = supabase
+        .from('teams')
+        .select('id, name, official_eyantra_id, status, created_by, theme:themes!inner(id, name, slug)');
+      if (activeThemeId) query = query.eq('theme_id', activeThemeId);
       const { data, error } = await query;
       if (error) throw error;
-      
       return (data || []).map((t: any) => ({
         team_id: t.id,
         team_name: t.name,
         arc_code: t.official_eyantra_id || 'N/A',
-        leader_name: t.created_by ? 'Team Leader' : 'N/A', // We can join profiles later if needed
+        leader_name: t.created_by ? 'Team Leader' : 'N/A',
         official_score: 0,
         arc_points: 0,
         completed_tasks: 0,
-        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme
+        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
       }));
     },
   });
@@ -46,7 +63,7 @@ export function LeaderboardPage() {
       const mm = gsap.matchMedia();
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.fromTo(
-          '.gs-leaderboard-row',
+          '.gs-row',
           { opacity: 0, y: 12 },
           { opacity: 1, y: 0, duration: DURATION.base, ease: EASE.out, stagger: 0.04, clearProps: 'all' }
         );
@@ -56,108 +73,145 @@ export function LeaderboardPage() {
     { scope: containerRef, dependencies: [data] }
   );
 
-  const standings = data || [];
-  const sortedStandings = [...standings].sort((a, b) => b.official_score - a.official_score);
+  const sorted = useMemo(
+    () => [...(data || [])].sort((a, b) => b.official_score - a.official_score),
+    [data]
+  );
+
+  const activeThemeName = themes.find(t => t.id === activeThemeId)?.name ?? 'Theme';
 
   return (
-    <div ref={containerRef} className="space-y-8 max-w-6xl mx-auto">
-      {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-text-primary">Leaderboard</h1>
-          <p className="text-sm text-text-secondary mt-1">Global rankings across all themes</p>
-        </div>
-        
-        {isAdmin && (
-          <ThemeWheel 
-            value={selectedTheme || ''} 
-            onChange={(val) => setSelectedTheme(val)} 
-          />
-        )}
+    <div ref={containerRef} className="space-y-6">
+      <div>
+        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Leaderboard</h1>
+        <p className="text-[14px] text-text-secondary mt-1">
+          Verified official standings · <span className="text-text-primary">{activeThemeName}</span>
+        </p>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="py-20 flex justify-center">
-          <Loader />
-        </div>
-      ) : isError ? (
-        <div className="p-8 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm text-center">
-          Unable to load leaderboard data.
-        </div>
-      ) : sortedStandings.length === 0 ? (
-        <div className="p-12 text-center border border-hairline rounded-xl bg-surface-muted/30">
-          <ShieldCheck className="w-10 h-10 text-text-secondary mx-auto mb-3 opacity-50" />
-          <h3 className="text-base font-semibold text-text-primary">No Verified Standings Yet</h3>
-          <p className="text-xs text-text-secondary mt-1">
-            Scores will appear here once tasks and score windows are verified by administrators.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-surface-muted/40 border border-hairline rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-hairline bg-surface-muted/80 text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
-                  <th className="py-3.5 px-4 text-center w-16">Rank</th>
-                  <th className="py-3.5 px-4">Team</th>
-                  <th className="py-3.5 px-4">Theme</th>
-                  <th className="py-3.5 px-4">Leader</th>
-                  <th className="py-3.5 px-4 text-center">Verified Tasks</th>
-                  <th className="py-3.5 px-4 text-right">
-                    Official Score
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-hairline text-sm">
-                {sortedStandings.map((t, idx) => (
-                  <tr
-                    key={t.team_id}
-                    className="gs-leaderboard-row hover:bg-surface-muted/60 transition-colors"
-                  >
-                    <td className="py-4 px-4 text-center font-bold">
-                      {idx === 0 ? (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-400/20 text-amber-300 font-extrabold text-xs border border-amber-400/50">
-                          1
-                        </span>
-                      ) : idx === 1 ? (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-400/20 text-slate-300 font-bold text-xs border border-slate-400/50">
-                          2
-                        </span>
-                      ) : idx === 2 ? (
-                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/20 text-amber-600 font-bold text-xs border border-amber-700/50">
-                          3
-                        </span>
-                      ) : (
-                        <span className="text-text-secondary text-xs">{idx + 1}</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-4 font-medium text-text-primary">
-                      <div>{t.team_name}</div>
-                      <div className="text-[11px] text-cyan-400 font-mono">{t.arc_code}</div>
-                    </td>
-                    <td className="py-4 px-4 text-text-secondary text-xs">
-                      {t.theme?.name || '—'}
-                    </td>
-                    <td className="py-4 px-4 text-text-secondary text-xs">
-                      {t.leader_name || '—'}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3" />
-                        {t.completed_tasks}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right font-bold text-text-primary text-base font-mono">
-                      <span className="text-cyan-300">{t.official_score.toFixed(1)} pts</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {isAdmin && (
+        <div>
+          <label htmlFor="lb-theme" className="sr-only">Select theme</label>
+          {/* Chips on wider screens, native select on mobile — both accessible. */}
+          <div
+            role="tablist"
+            aria-label="Leaderboard theme"
+            className="hidden sm:flex flex-wrap gap-2"
+          >
+            {themes.map(t => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={t.id === activeThemeId}
+                data-active={t.id === activeThemeId}
+                onClick={() => setSelectedTheme(t.id)}
+                className="chip"
+              >
+                {t.name}
+              </button>
+            ))}
           </div>
+          <select
+            id="lb-theme"
+            className="arc-input sm:hidden"
+            value={activeThemeId}
+            onChange={e => setSelectedTheme(e.target.value)}
+          >
+            {themes.map(t => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
         </div>
       )}
+
+      {isLoading ? (
+        <div className="py-20 flex justify-center"><Spinner size={32} /></div>
+      ) : isError ? (
+        <ErrorState description="Unable to load leaderboard data." onRetry={() => refetch()} />
+      ) : sorted.length === 0 ? (
+        <EmptyState
+          icon={<ShieldCheck size={30} />}
+          title="No verified standings yet"
+          description="Scores appear here once tasks and score windows are verified by administrators."
+        />
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="surface-card overflow-hidden hidden sm:block p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-hairline bg-muted/60 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+                    <th scope="col" className="py-3 px-4 text-center w-16">Rank</th>
+                    <th scope="col" className="py-3 px-4">Team</th>
+                    <th scope="col" className="py-3 px-4">Theme</th>
+                    <th scope="col" className="py-3 px-4">Leader</th>
+                    <th scope="col" className="py-3 px-4 text-center">Verified tasks</th>
+                    <th scope="col" className="py-3 px-4 text-right">Official score</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {sorted.map((t, idx) => (
+                    <tr key={t.team_id} className="gs-row border-b border-hairline last:border-0 hover:bg-muted/40 transition-colors">
+                      <td className="py-3.5 px-4 text-center"><RankMedal rank={idx + 1} /></td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-medium text-text-primary">{t.team_name}</div>
+                        <div className="text-[11px] text-accent-color tabular">{t.arc_code}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.theme?.name || '—'}</td>
+                      <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.leader_name || '—'}</td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="badge badge-success"><CheckCircle2 size={13} />{t.completed_tasks}</span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-semibold text-text-primary tabular">
+                        {t.official_score.toFixed(1)} <span className="text-text-muted text-xs">pts</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-2.5">
+            {sorted.map((t, idx) => (
+              <div key={t.team_id} className="gs-row surface-card p-4 flex items-center gap-3">
+                <RankMedal rank={idx + 1} />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-text-primary truncate">{t.team_name}</p>
+                  <p className="text-[12px] text-text-secondary truncate">
+                    {t.theme?.name || '—'} · <span className="tabular text-accent-color">{t.arc_code}</span>
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-semibold text-text-primary tabular">{t.official_score.toFixed(1)}</p>
+                  <p className="text-[11px] text-text-muted">pts</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
+  );
+}
+
+function RankMedal({ rank }: { rank: number }) {
+  if (rank > 3) {
+    return <span className="inline-grid place-items-center w-7 h-7 text-[13px] text-text-secondary tabular">{rank}</span>;
+  }
+  const styles = [
+    { bg: 'color-mix(in oklab, var(--c-warning) 20%, transparent)', bd: 'var(--c-warning)', fg: 'var(--c-warning)' },
+    { bg: 'color-mix(in oklab, var(--c-text-3) 22%, transparent)', bd: 'var(--c-text-3)', fg: 'var(--c-text-2)' },
+    { bg: 'color-mix(in oklab, #b45309 24%, transparent)', bd: '#b45309', fg: '#d08a3f' },
+  ][rank - 1];
+  return (
+    <span
+      className="inline-grid place-items-center w-7 h-7 rounded-full text-[12px] font-bold border tabular"
+      style={{ background: styles.bg, borderColor: styles.bd, color: styles.fg }}
+    >
+      {rank === 1 ? <Trophy size={13} /> : rank}
+    </span>
   );
 }

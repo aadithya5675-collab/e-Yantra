@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase/client';
 import { useThemes } from '../onboarding/api';
-import { Loader2, Send } from 'lucide-react';
+import { Send, Plus } from 'lucide-react';
 import { Reveal } from '../../components/motion/Reveal';
+import { Button } from '../../components/ui/Button';
+import { useToast } from '../../components/ui/Toast';
 
 export function CreateAnnouncement() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: themes, isLoading: themesLoading } = useThemes();
-  
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [themeId, setThemeId] = useState<string>('all');
@@ -18,15 +21,13 @@ export function CreateAnnouncement() {
     mutationFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
-
       const { error } = await supabase.from('announcements').insert([{
         title: title.trim(),
         content: content.trim(),
         theme_id: themeId === 'all' ? null : parseInt(themeId, 10),
         created_by: userData.user.id,
-        is_pinned: isPinned
+        is_pinned: isPinned,
       }]);
-      
       if (error) throw error;
     },
     onSuccess: () => {
@@ -35,7 +36,9 @@ export function CreateAnnouncement() {
       setContent('');
       setThemeId('all');
       setIsPinned(false);
-    }
+      toast('Announcement posted', 'success');
+    },
+    onError: () => toast('Could not post announcement', 'error'),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,105 +48,51 @@ export function CreateAnnouncement() {
   };
 
   return (
-    <Reveal className="mb-12">
-      <div className="surface-card p-6 md:p-8 rounded-2xl shadow-[6px_6px_0px_black] border-2 border-black">
-        <h2 className="text-2xl font-black uppercase tracking-tight text-text-primary mb-6 flex items-center gap-2">
-          Create Announcement
+    <Reveal>
+      <section className="surface-card p-5 sm:p-6">
+        <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em] text-text-muted mb-5">
+          <Plus size={16} /> New announcement
         </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="title" className="block text-sm font-bold uppercase tracking-wider text-text-primary">
-                Topic
-              </label>
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Weekly Sync Update"
-                className="w-full arc-input bg-surface-50"
-                required
-              />
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="field">
+              <label htmlFor="an-title" className="field-label">Topic</label>
+              <input id="an-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Weekly sync update" className="arc-input" required />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="theme" className="block text-sm font-bold uppercase tracking-wider text-text-primary">
-                Target Theme
-              </label>
-              <select
-                id="theme"
-                value={themeId}
-                onChange={(e) => setThemeId(e.target.value)}
-                className="w-full arc-input bg-surface-50 cursor-pointer"
-                disabled={themesLoading}
-              >
-                <option value="all">Global (All Themes)</option>
+            <div className="field">
+              <label htmlFor="an-theme" className="field-label">Target theme</label>
+              <select id="an-theme" value={themeId} onChange={e => setThemeId(e.target.value)} className="arc-input" disabled={themesLoading}>
+                <option value="all">Global (all themes)</option>
                 {themes?.map(theme => (
-                  <option key={theme.id} value={theme.id.toString()}>
-                    {theme.name}
-                  </option>
+                  <option key={theme.id} value={theme.id.toString()}>{theme.name}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="content" className="block text-sm font-bold uppercase tracking-wider text-text-primary">
-              Description
-            </label>
-            <textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Write your announcement details here..."
-              className="w-full arc-input bg-surface-50 min-h-[120px] resize-y"
-              required
-            />
+          <div className="field">
+            <label htmlFor="an-content" className="field-label">Description</label>
+            <textarea id="an-content" value={content} onChange={e => setContent(e.target.value)} placeholder="Write the announcement details…" className="arc-input min-h-[120px] resize-y" required />
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={isPinned}
-                  onChange={(e) => setIsPinned(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <div className="w-6 h-6 border-2 border-black rounded transition-colors peer-checked:bg-accent-color"></div>
-                <div className="absolute opacity-0 peer-checked:opacity-100 text-black">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-              </div>
-              <span className="font-semibold text-text-secondary group-hover:text-text-primary transition-colors">
-                Pin to top
-              </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isPinned}
+                onChange={e => setIsPinned(e.target.checked)}
+                className="w-4 h-4 rounded accent-[var(--c-accent)]"
+              />
+              <span className="text-[14px] text-text-secondary">Pin to top</span>
             </label>
 
-            <button
-              type="submit"
-              disabled={createMutation.isPending || !title.trim() || !content.trim()}
-              className="btn-primary w-full sm:w-auto flex items-center justify-center gap-2"
-            >
-              {createMutation.isPending ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send size={18} />
-                  Send Announcement
-                </>
-              )}
-            </button>
+            <Button type="submit" loading={createMutation.isPending} disabled={!title.trim() || !content.trim()} className="w-full sm:w-auto">
+              <Send size={16} /> Post announcement
+            </Button>
           </div>
         </form>
-      </div>
+      </section>
     </Reveal>
   );
 }

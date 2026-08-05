@@ -1,7 +1,9 @@
+import { ClipboardList } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { useTasks } from './api';
 import { TaskCard } from './TaskCard';
 import { Reveal } from '../../components/motion/Reveal';
+import { EmptyState, Skeleton } from '../../components/ui/primitives';
 import type { Task } from '../../types';
 
 export function MyTasks() {
@@ -15,28 +17,24 @@ export function MyTasks() {
   const open = inProgress.length + pending.length;
 
   return (
-    <div className="max-w-[760px] mx-auto">
-      <Reveal className="mb-12" y={20}>
-        <h1 className="text-[40px] leading-[1.08] font-semibold tracking-[-0.028em] text-text-primary">
-          My Tasks
-        </h1>
-        <p className="mt-2 text-[17px] text-text-secondary">
+    <div>
+      <Reveal className="mb-6" y={16}>
+        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">My tasks</h1>
+        <p className="mt-1 text-[14.5px] text-text-secondary">
           {isLoading
             ? 'Loading…'
             : open === 0
-              ? 'Nothing open. Nicely done.'
+              ? 'Nothing open — nicely done.'
               : `${open} task${open === 1 ? '' : 's'} still open.`}
         </p>
       </Reveal>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[0, 1, 2].map(i => <div key={i} className="surface-card h-24 animate-pulse" />)}
+          {[0, 1, 2].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
         </div>
       ) : tasks?.length === 0 ? (
-        <div className="text-center py-24">
-          <p className="text-[17px] text-text-secondary">No tasks assigned to you yet.</p>
-        </div>
+        <EmptyState icon={<ClipboardList size={30} />} title="No tasks yet" description="Tasks assigned to you will appear here." />
       ) : (
         <>
           <Section title="In progress" tasks={inProgress} />

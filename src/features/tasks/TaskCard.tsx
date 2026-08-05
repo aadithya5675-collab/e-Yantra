@@ -153,6 +153,7 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
             <>
               <button
                 onClick={() => setExpanded(!expanded)}
+                aria-expanded={expanded}
                 className="inline-flex items-center gap-1 mt-3 text-[12px] text-accent-color hover:opacity-70 transition-opacity"
               >
                 <ChevronDown
@@ -171,38 +172,41 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
                   )}
 
                   {canUpdate && (
-                    <textarea
-                      className="field text-[13px] resize-none"
-                      rows={2}
-                      placeholder="Progress notes…"
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      onBlur={saveNotes}
-                    />
+                    <label className="field">
+                      <span className="field-label">Progress notes</span>
+                      <textarea
+                        className="arc-input text-[13px] resize-y min-h-[64px]"
+                        rows={2}
+                        placeholder="What did you get done?"
+                        value={notes}
+                        onChange={e => setNotes(e.target.value)}
+                        onBlur={saveNotes}
+                      />
+                    </label>
                   )}
 
                   {isAssignee && (
-                    <div className="grid grid-cols-2 gap-3 mt-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[12px] font-medium text-text-secondary">Due Date</label>
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      <label className="field">
+                        <span className="field-label">Due date</span>
                         <input
                           type="date"
-                          className="field text-[13px]"
+                          className="arc-input text-[13px]"
                           value={dueDate}
                           onChange={e => setDueDate(e.target.value)}
                           onBlur={saveDueDate}
                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-[12px] font-medium text-text-secondary">Due Time</label>
+                      </label>
+                      <label className="field">
+                        <span className="field-label">Due time</span>
                         <input
                           type="time"
-                          className="field text-[13px]"
+                          className="arc-input text-[13px]"
                           value={dueTime}
                           onChange={e => setDueTime(e.target.value)}
                           onBlur={saveDueDate}
                         />
-                      </div>
+                      </label>
                     </div>
                   )}
                 </div>

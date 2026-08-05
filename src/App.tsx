@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { Login } from './features/auth/Login';
 import { Signup } from './features/auth/Signup';
 import { AppShell } from './app/AppShell';
-import { Loader } from './components/uiverse/Loader';
+import { FullPageSpinner } from './components/ui/Spinner';
 
 // Route-level code splitting keeps the first paint light.
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -28,11 +28,7 @@ const queryClient = new QueryClient({
 });
 
 function FullPageLoader() {
-  return (
-    <div className="min-h-screen bg-page flex items-center justify-center">
-      <Loader />
-    </div>
-  );
+  return <FullPageSpinner label="Establishing uplink…" />;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

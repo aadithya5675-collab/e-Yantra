@@ -3,9 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
-import { GhostLoader } from '../../components/uiverse/GhostLoader';
-import './Auth.css';
+import { AuthLayout } from './AuthLayout';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
 
 const loginSchema = z.object({
   email: z.string().email('Enter your email address'),
@@ -17,7 +19,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -25,7 +26,6 @@ export function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
-    
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: data.email.trim(),
       password: data.password,
@@ -34,60 +34,54 @@ export function Login() {
     if (signInError) {
       setError('Invalid email or password');
     } else {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        navigate('/');
-      }, 1500); // Wait 1.5s to show the ghost animation before navigating
+      // Proceed immediately — no artificial delay.
+      navigate('/');
     }
   };
 
-  if (isTransitioning) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <GhostLoader />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-      <form className="brutalist-form" onSubmit={handleSubmit(onSubmit)}>
-        <div className="brutalist-title">
-          Sign In<br />
-          <span>access your team workspace</span>
-        </div>
-
+    <AuthLayout
+      heading="Sign in"
+      subheading="Access your ARC team workspace."
+      footer={
+        <>
+          Don&apos;t have an account?{' '}
+          <Link to="/signup" className="text-accent-color font-medium hover:underline">
+            Create one
+          </Link>
+        </>
+      }
+    >
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         {error && (
-          <div className="text-red-600 font-bold text-sm bg-red-100 p-2 rounded border-2 border-black w-full text-center">
+          <div role="alert" className="flex items-center gap-2 text-[13px] text-danger-color bg-danger-color/12 border border-danger-color/25 rounded-lg px-3 py-2.5">
+            <AlertCircle size={16} className="shrink-0" />
             {error}
           </div>
         )}
 
-        <input 
-          className="brutalist-input" 
-          placeholder="Enter your email" 
-          {...register('email')} 
-          disabled={isSubmitting}
+        <Input
+          label="Email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@kpriet.ac.in"
+          error={errors.email?.message}
+          {...register('email')}
         />
-        {errors.email && <p className="text-red-500 text-xs font-bold -mt-3 text-left">{errors.email.message}</p>}
 
-        <input 
-          className="brutalist-input" 
-          placeholder="Enter your password" 
-          type="password" 
+        <Input
+          label="Password"
+          type="password"
           autoComplete="current-password"
+          placeholder="Your password"
+          error={errors.password?.message}
           {...register('password')}
         />
-        {errors.password && <span className="text-red-600 font-bold text-xs">{errors.password.message}</span>}
 
-        <button className="brutalist-button-confirm" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Sign In →'}
-        </button>
-
-        <Link to="/signup" className="brutalist-link">
-          Don't have an account? Sign up
-        </Link>
+        <Button type="submit" size="lg" loading={isSubmitting} className="w-full">
+          {isSubmitting ? 'Signing in…' : 'Sign in'}
+        </Button>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

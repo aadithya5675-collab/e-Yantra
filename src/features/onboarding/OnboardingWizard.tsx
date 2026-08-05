@@ -140,12 +140,13 @@ export function OnboardingWizard() {
             </div>
           </button>
           
-          <button 
+          <button
             onClick={() => handleRoleSelect('member')}
-            className="arc-panel p-8 flex flex-col items-center justify-center gap-4 hover:border-cyan-400 transition-colors group text-left"
+            className="arc-panel p-8 flex flex-col items-center justify-center gap-4 hover:border-accent transition-colors group text-left"
+            style={{ ['--tw-ring-color' as string]: 'var(--c-accent-2)' }}
           >
-            <div className="w-16 h-16 rounded-full bg-cyan-400/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <User size={32} className="text-cyan-400" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform" style={{ background: 'color-mix(in oklab, var(--c-accent-2) 12%, transparent)' }}>
+              <User size={32} style={{ color: 'var(--c-accent-2)' }} />
             </div>
             <div className="text-center">
               <h3 className="text-xl font-bold text-primary-text mb-2">I am a Team Member</h3>
@@ -204,7 +205,7 @@ export function OnboardingWizard() {
                 </label>
                 <input
                   id="teamName"
-                  className="brutalist-input w-full"
+                  className="arc-input w-full"
                   placeholder="e.g. Apollo Rovers"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -218,7 +219,7 @@ export function OnboardingWizard() {
                 </label>
                 <input
                   id="officialId"
-                  className="brutalist-input w-full"
+                  className="arc-input w-full"
                   placeholder="e.g. EYRC-2026-1234"
                   value={officialId}
                   onChange={(e) => setOfficialId(e.target.value)}
@@ -231,7 +232,7 @@ export function OnboardingWizard() {
                 </label>
                 <textarea
                   id="description"
-                  className="brutalist-input w-full min-h-[100px] resize-y"
+                  className="arc-input w-full min-h-[100px] resize-y"
                   placeholder="What is your team's goal?"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
