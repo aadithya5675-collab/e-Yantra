@@ -65,10 +65,7 @@ DROP POLICY IF EXISTS "Allow public update to profiles" ON public.profiles;
 CREATE POLICY "Allow public update to profiles" ON public.profiles FOR UPDATE USING (true) WITH CHECK (true);
 
 -- 4. Insert the 7 custom themes from the Leaderboard
--- First, clear old themes if they exist (WARNING: this will cascade delete teams using them if ON DELETE CASCADE is set, 
--- but since this is initial setup, it should be fine. We use DELETE to avoid constraint errors)
-DELETE FROM public.themes;
-
+-- We use ON CONFLICT to avoid deleting themes that teams are already assigned to!
 INSERT INTO public.themes (id, slug, name, tagline, accent_color, display_order) OVERRIDING SYSTEM VALUE VALUES 
 (1, 'lq', 'LQ Theme', 'Theme 01', '#3B82F6', 1),
 (2, 'kd', 'KD Theme', 'Theme 02', '#10B981', 2),
@@ -76,4 +73,13 @@ INSERT INTO public.themes (id, slug, name, tagline, accent_color, display_order)
 (4, 'he', 'HE Theme', 'Theme 04', '#F59E0B', 4),
 (5, 'nv', 'NV Theme', 'Theme 05', '#8B5CF6', 5),
 (6, 'eb', 'EB Theme', 'Theme 06', '#EC4899', 6),
-(7, 'pb', 'PB Theme', 'Theme 07', '#14B8A6', 7);
+(7, 'pb', 'PB Theme', 'Theme 07', '#14B8A6', 7)
+ON CONFLICT (id) DO UPDATE SET 
+    slug = EXCLUDED.slug, 
+    name = EXCLUDED.name,
+    tagline = EXCLUDED.tagline,
+    accent_color = EXCLUDED.accent_color,
+    display_order = EXCLUDED.display_order;
+
+-- Quick fix to reassign any unassigned teams back to HE Theme just in case they were lost
+UPDATE public.teams SET theme_id = 4 WHERE theme_id IS NULL;

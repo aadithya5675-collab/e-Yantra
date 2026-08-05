@@ -11,7 +11,7 @@ export function AppShell() {
 
   const navItems = [
     ...(isAdmin ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),
-    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+    ...(isAdmin ? [{ name: 'Leaderboard', path: '/leaderboard', icon: Trophy }] : []),
     { name: 'Announcements', path: '/announcements', icon: Megaphone },
     ...(!isAdmin ? [{ name: 'My Team', path: '/my-team', icon: Users }] : []),
     ...(!isAdmin ? [{ name: 'My Tasks', path: '/my-tasks', icon: ClipboardList }] : []),

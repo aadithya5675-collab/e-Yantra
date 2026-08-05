@@ -65,7 +65,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 function IndexRoute() {
   const { isAdmin } = useAuth();
   if (isAdmin) return <Dashboard />;
-  return <Navigate to="/leaderboard" replace />;
+  return <Navigate to="/my-team" replace />;
 }
 
 function App() {
@@ -90,7 +90,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<IndexRoute />} />
-                <Route path="leaderboard" element={<LeaderboardPage />} />
+                <Route path="leaderboard" element={<AdminRoute><LeaderboardPage /></AdminRoute>} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
                 <Route path="my-team" element={<MemberRoute><MyTeam /></MemberRoute>} />
                 <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />
