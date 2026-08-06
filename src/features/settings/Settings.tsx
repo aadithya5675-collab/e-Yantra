@@ -64,7 +64,7 @@ export function Settings() {
   return (
     <div className="max-w-2xl mx-auto">
       <Reveal className="mb-8" y={16}>
-        <h1 className="text-[26px] font-semibold tracking-tight text-text-primary">Settings</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">Settings</h1>
         <p className="mt-1 text-[14.5px] text-text-secondary">
           {profile?.display_name} · {roleLabel}
         </p>

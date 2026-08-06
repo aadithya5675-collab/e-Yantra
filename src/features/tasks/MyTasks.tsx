@@ -19,7 +19,7 @@ export function MyTasks() {
   return (
     <div>
       <Reveal className="mb-6" y={16}>
-        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">My tasks</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">My tasks</h1>
         <p className="mt-1 text-[14.5px] text-text-secondary">
           {isLoading
             ? 'Loading…'

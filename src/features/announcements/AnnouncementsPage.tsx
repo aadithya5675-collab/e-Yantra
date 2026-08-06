@@ -80,7 +80,7 @@ export function AnnouncementsPage() {
       <div>
         <div className="flex items-center gap-2.5">
           <Megaphone size={22} className="text-accent-color" />
-          <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Announcements</h1>
+          <h1 className="font-display text-[30px] tracking-tight text-text-primary">Announcements</h1>
         </div>
         <p className="text-[14px] text-text-secondary mt-1">
           Official communications, guidelines and deadlines from ARC leads.

@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 /*
- * ARC Mission Control — unified design system.
- * One semantic token layer, two explicit themes (data-theme="dark|light").
- * Aerospace command-centre: calm, precise, technical. No brutalism.
+ * ARC — editorial engineering-fieldbook visual system.
+ * Warm technical paper (light) / graphite (dark); cobalt interaction accent,
+ * signal orange for urgency. Typeset with Instrument Serif (display),
+ * IBM Plex Sans (interface), IBM Plex Mono (numeric/technical).
+ * One semantic token layer, two themes via [data-theme].
  */
 
-/* Dark theme toggling is driven by the [data-theme] attribute on <html>. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-  /* ---- Semantic colors (canonical names) ---------------------------- */
+  /* ---- Semantic colors (canonical) --------------------------------- */
   --color-canvas: var(--c-canvas);
   --color-surface: var(--c-surface);
   --color-raised: var(--c-raised);
@@ -28,12 +29,13 @@
 
   --color-accent-color: var(--c-accent);
   --color-accent-2: var(--c-accent-2);
+  --color-signal: var(--c-signal);
   --color-success-color: var(--c-success);
   --color-warning-color: var(--c-warning);
   --color-danger-color: var(--c-danger);
   --color-info-color: var(--c-info);
 
-  /* ---- Aliases so every class already used in JSX resolves ---------- */
+  /* ---- Aliases so every class already used in the app resolves ------ */
   --color-page: var(--c-canvas);
   --color-elevated: var(--c-raised);
   --color-panel: var(--c-muted);
@@ -47,17 +49,17 @@
   --color-info: var(--c-info);
 
   /* ---- Typography --------------------------------------------------- */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
-    Menlo, Consolas, monospace;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-serif: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
 
-  /* ---- Radius ------------------------------------------------------- */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 26px;
+  /* ---- Radius — small, controlled, editorial ------------------------ */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
 
   /* ---- Motion ------------------------------------------------------- */
   --ease-out-arc: cubic-bezier(0.22, 1, 0.36, 1);
@@ -71,71 +73,74 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --c-canvas: #070b14;
-  --c-surface: #0d1523;
-  --c-raised: #121d2d;
-  --c-muted: #172337;
-  --c-sidebar: #090f1b;
+  /* Graphite — not navy. */
+  --c-canvas: #16181b;
+  --c-surface: #202327;
+  --c-muted: #282c30;
+  --c-raised: #2d3136;
+  --c-sidebar: #1a1d20;
 
-  --c-border: #26364d;
-  --c-border-strong: #35496a;
-  --c-focus: #22d3ee;
-  --c-scrim: rgb(3 6 12 / 0.72);
+  --c-border: #393d42;
+  --c-border-strong: #555a61;
+  --c-focus: #7892e6;
+  --c-scrim: rgb(10 11 13 / 0.66);
 
-  --c-text: #f4f7fb;
-  --c-text-2: #a8b4c7;
-  --c-text-3: #6b7a90;
+  --c-text: #eeeae2;
+  --c-text-2: #b4b0a7;
+  --c-text-3: #8d8a83;
 
-  --c-accent: #22d3ee;
-  --c-accent-2: #6d7cff;
-  --c-accent-contrast: #04121a;
-  --c-success: #34d399;
-  --c-warning: #fbbf24;
-  --c-danger: #fb7185;
-  --c-info: #38bdf8;
+  --c-accent: #7892e6;          /* cobalt */
+  --c-accent-2: #6f88df;        /* deep cobalt (subtle, non-neon) */
+  --c-accent-contrast: #16181b;
+  --c-signal: #dc7957;          /* signal orange */
+  --c-success: #7fb08a;
+  --c-warning: #dc7957;
+  --c-danger: #d98a86;
+  --c-info: #7892e6;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-2: 0 8px 24px -8px rgb(0 0 0 / 0.55);
-  --shadow-3: 0 24px 60px -18px rgb(0 0 0 / 0.65);
-  --grid-opacity: 0.05;
+  --shadow-1: 0 1px 1px rgb(0 0 0 / 0.28);
+  --shadow-2: 0 6px 18px -10px rgb(0 0 0 / 0.5);
+  --shadow-3: 0 18px 44px -20px rgb(0 0 0 / 0.6);
+  --paper-tint: 0;
 }
 
 [data-theme="light"] {
   color-scheme: light;
 
-  --c-canvas: #f3f6fa;
-  --c-surface: #ffffff;
-  --c-raised: #eaf0f6;
-  --c-muted: #e2eaf3;
-  --c-sidebar: #ffffff;
+  /* Warm technical paper. */
+  --c-canvas: #f3f0e8;
+  --c-surface: #faf9f5;
+  --c-muted: #eae5da;
+  --c-raised: #ffffff;
+  --c-sidebar: #efece3;
 
-  --c-border: #cbd5e1;
-  --c-border-strong: #94a3b8;
-  --c-focus: #0369a1;
-  --c-scrim: rgb(15 23 42 / 0.44);
+  --c-border: #d6d0c4;
+  --c-border-strong: #aaa497;
+  --c-focus: #2f56c5;
+  --c-scrim: rgb(25 27 30 / 0.34);
 
-  --c-text: #0b1220;
-  --c-text-2: #526174;
-  --c-text-3: #7a8698;
+  --c-text: #191b1e;
+  --c-text-2: #686a68;
+  --c-text-3: #89877f;
 
-  --c-accent: #0369a1;
-  --c-accent-2: #3157d5;
+  --c-accent: #2f56c5;          /* cobalt */
+  --c-accent-2: #274aad;        /* deep cobalt */
   --c-accent-contrast: #ffffff;
-  --c-success: #047857;
-  --c-warning: #b45309;
-  --c-danger: #be123c;
-  --c-info: #0369a1;
+  --c-signal: #c75836;          /* signal orange */
+  --c-success: #3f7d54;
+  --c-warning: #b8622f;
+  --c-danger: #b0432f;
+  --c-info: #2f56c5;
 
-  --shadow-1: 0 1px 2px rgb(15 23 42 / 0.08);
-  --shadow-2: 0 10px 26px -12px rgb(15 23 42 / 0.18);
-  --shadow-3: 0 24px 60px -20px rgb(15 23 42 / 0.22);
-  --grid-opacity: 0.04;
+  --shadow-1: 0 1px 1px rgb(65 55 35 / 0.06);
+  --shadow-2: 0 8px 20px -14px rgb(65 55 35 / 0.18);
+  --shadow-3: 0 18px 40px -22px rgb(65 55 35 / 0.22);
+  --paper-tint: 1;
 }
 
 /*
- * Back-compat aliases for legacy raw CSS var names referenced in a few inline
- * styles. They point at the new --c-* runtime vars, so they re-resolve per
- * theme automatically. Defined once — the cascade handles both themes.
+ * Back-compat aliases for legacy raw CSS var names used in a few inline
+ * styles. They re-resolve per theme via the --c-* vars.
  */
 :root {
   --accent-color: var(--c-accent);
@@ -155,7 +160,6 @@
   *,
   ::before,
   ::after {
-    /* Theme-aware default border — replaces the old brutalist black rule. */
     border-color: var(--c-border);
   }
 
@@ -168,12 +172,11 @@
     background-color: var(--c-canvas);
     color: var(--c-text);
     font-family: var(--font-sans);
-    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    line-height: 1.55;
   }
 
-  /* Consistent, visible focus ring across the app. */
   :focus-visible {
     outline: 2px solid var(--c-focus);
     outline-offset: 2px;
@@ -181,19 +184,38 @@
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--c-accent) 32%, transparent);
+    background: color-mix(in oklab, var(--c-accent) 24%, transparent);
     color: var(--c-text);
   }
 
   h1, h2, h3, h4 {
     color: var(--c-text);
     text-wrap: balance;
+    line-height: 1.2;
   }
 
-  /* Numeric telemetry / codes read as mono, tight. */
+  /* Editorial display face — used sparingly on page titles. */
+  .font-display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: 0.004em;
+    line-height: 1.08;
+  }
+
+  /* Numeric / technical metadata. */
   .tabular {
     font-variant-numeric: tabular-nums;
     font-family: var(--font-mono);
+    letter-spacing: -0.01em;
+  }
+
+  /* Small technical section marker — restrained tracking, not neon. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--c-text-3);
   }
 }
 
@@ -201,19 +223,17 @@
    Components
    ==================================================================== */
 @layer components {
-  /* ---- Surfaces ----------------------------------------------------- */
+  /* ---- Surfaces — quiet, ruled, minimal shadow --------------------- */
   .surface-card {
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-1);
   }
 
   .arc-panel {
-    background-color: var(--c-raised);
+    background-color: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-2);
+    border-radius: var(--radius-lg);
   }
 
   .arc-elevated {
@@ -223,57 +243,51 @@
     box-shadow: var(--shadow-3);
   }
 
-  /* Subtle command-grid backdrop for hero/auth areas. */
+  /* Fine ruled backdrop for editorial areas (auth). Very subtle. */
   .arc-grid {
     background-image:
-      linear-gradient(var(--c-border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--c-border) 1px, transparent 1px);
-    background-size: 44px 44px;
-    opacity: var(--grid-opacity);
+      linear-gradient(var(--c-border) 1px, transparent 1px);
+    background-size: 100% 32px;
+    opacity: 0.5;
+    mask-image: linear-gradient(180deg, transparent, black 20%, black 80%, transparent);
   }
 
   /* ---- Fields ------------------------------------------------------- */
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
   .field-label {
     font-size: 13px;
-    font-weight: 550;
+    font-weight: 500;
     color: var(--c-text-2);
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
   }
 
   .arc-input {
     width: 100%;
-    min-height: 44px;
-    padding: 10px 13px;
+    min-height: 42px;
+    padding: 9px 12px;
     font-size: 15px;
+    font-family: var(--font-sans);
     color: var(--c-text);
-    background-color: var(--c-surface);
-    border: 1px solid var(--c-border);
+    background-color: var(--c-raised);
+    border: 1px solid var(--c-border-strong);
     border-radius: var(--radius-md);
-    transition: border-color 0.16s var(--ease-out-arc),
-      box-shadow 0.16s var(--ease-out-arc), background-color 0.16s;
+    transition: border-color 0.16s var(--ease-out-arc), box-shadow 0.16s var(--ease-out-arc);
     outline: none;
   }
   .arc-input::placeholder { color: var(--c-text-3); }
-  .arc-input:hover { border-color: var(--c-border-strong); }
+  .arc-input:hover { border-color: color-mix(in oklab, var(--c-border-strong) 70%, var(--c-text)); }
   .arc-input:focus,
   .arc-input:focus-visible {
     border-color: var(--c-accent);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-accent) 26%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-accent) 20%, transparent);
     outline: none;
   }
   .arc-input[aria-invalid="true"] {
     border-color: var(--c-danger);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-danger) 22%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--c-danger) 18%, transparent);
   }
 
-  /* ---- Buttons ------------------------------------------------------ */
-  /* Variants carry the base layout too, so a bare `btn-primary` (no `btn`)
-     is still fully styled. */
+  /* ---- Buttons — compact, rectangular, no glow --------------------- */
   .btn,
   .btn-primary,
   .btn-secondary,
@@ -283,41 +297,42 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
-    padding: 0 18px;
+    min-height: 42px;
+    padding: 0 16px;
     font-size: 14.5px;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1;
     border-radius: var(--radius-md);
     border: 1px solid transparent;
     cursor: pointer;
     white-space: nowrap;
-    transition: transform 0.12s var(--ease-out-arc),
-      background-color 0.16s, border-color 0.16s, box-shadow 0.16s, color 0.16s;
+    transition: background-color 0.16s, border-color 0.16s, color 0.16s, transform 0.1s;
   }
-  .btn:active { transform: translateY(1px) scale(0.99); }
-  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-  .btn-sm { min-height: 36px; padding: 0 13px; font-size: 13.5px; border-radius: var(--radius-sm); }
-  .btn-lg { min-height: 50px; padding: 0 24px; font-size: 16px; }
+  .btn:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-ghost:active,
+  .btn-danger:active { transform: translateY(0.5px); }
+  .btn:disabled, .btn-primary:disabled, .btn-secondary:disabled,
+  .btn-ghost:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { min-height: 34px; padding: 0 11px; font-size: 13.5px; }
+  .btn-lg { min-height: 46px; padding: 0 20px; font-size: 15.5px; }
 
   .btn-primary {
     background-color: var(--c-accent);
     color: var(--c-accent-contrast);
-    box-shadow: var(--shadow-1);
   }
   .btn-primary:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--c-accent) 88%, white);
-    box-shadow: 0 6px 18px -6px color-mix(in oklab, var(--c-accent) 60%, transparent);
+    background-color: color-mix(in oklab, var(--c-accent) 86%, black);
   }
 
   .btn-secondary {
-    background-color: var(--c-muted);
+    background-color: transparent;
     color: var(--c-text);
-    border-color: var(--c-border);
+    border-color: var(--c-border-strong);
   }
   .btn-secondary:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--c-muted) 82%, var(--c-text));
-    border-color: var(--c-border-strong);
+    background-color: color-mix(in oklab, var(--c-text) 6%, transparent);
   }
 
   .btn-ghost {
@@ -325,7 +340,7 @@
     color: var(--c-text-2);
   }
   .btn-ghost:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--c-text) 8%, transparent);
+    background-color: color-mix(in oklab, var(--c-text) 6%, transparent);
     color: var(--c-text);
   }
 
@@ -334,15 +349,15 @@
     color: #fff;
   }
   .btn-danger:hover:not(:disabled) {
-    background-color: color-mix(in oklab, var(--c-danger) 88%, black);
+    background-color: color-mix(in oklab, var(--c-danger) 86%, black);
   }
 
   .icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: var(--radius-md);
     color: var(--c-text-2);
     background: transparent;
@@ -351,29 +366,29 @@
     transition: background-color 0.16s, color 0.16s, border-color 0.16s;
   }
   .icon-btn:hover {
-    background-color: color-mix(in oklab, var(--c-text) 8%, transparent);
+    background-color: color-mix(in oklab, var(--c-text) 6%, transparent);
     color: var(--c-text);
   }
 
-  /* ---- Chips & badges ---------------------------------------------- */
+  /* ---- Chips & markers — rectangular competition labels, not pills -- */
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px 11px;
+    padding: 5px 10px;
     font-size: 13px;
-    font-weight: 550;
-    border-radius: 999px;
-    border: 1px solid var(--c-border);
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--c-border-strong);
     color: var(--c-text-2);
     background-color: var(--c-surface);
     cursor: pointer;
     transition: all 0.16s var(--ease-out-arc);
   }
-  .chip:hover { border-color: var(--c-border-strong); color: var(--c-text); }
+  .chip:hover { border-color: var(--c-accent); color: var(--c-text); }
   .chip[aria-selected="true"],
   .chip[data-active="true"] {
-    background-color: color-mix(in oklab, var(--c-accent) 16%, var(--c-surface));
+    background-color: color-mix(in oklab, var(--c-accent) 12%, var(--c-surface));
     border-color: var(--c-accent);
     color: var(--c-text);
   }
@@ -382,29 +397,29 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 3px 9px;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 999px;
+    padding: 2px 7px;
+    font-size: 11.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--c-border);
     color: var(--c-text-2);
     background-color: var(--c-muted);
   }
-  .badge-accent  { color: var(--c-accent);  background: color-mix(in oklab, var(--c-accent) 14%, transparent);  border-color: color-mix(in oklab, var(--c-accent) 40%, transparent); }
-  .badge-success { color: var(--c-success); background: color-mix(in oklab, var(--c-success) 14%, transparent); border-color: color-mix(in oklab, var(--c-success) 40%, transparent); }
-  .badge-warning { color: var(--c-warning); background: color-mix(in oklab, var(--c-warning) 16%, transparent); border-color: color-mix(in oklab, var(--c-warning) 42%, transparent); }
-  .badge-danger  { color: var(--c-danger);  background: color-mix(in oklab, var(--c-danger) 15%, transparent);  border-color: color-mix(in oklab, var(--c-danger) 42%, transparent); }
+  .badge-accent  { color: var(--c-accent);  background: color-mix(in oklab, var(--c-accent) 12%, transparent);  border-color: color-mix(in oklab, var(--c-accent) 32%, transparent); }
+  .badge-success { color: var(--c-success); background: color-mix(in oklab, var(--c-success) 12%, transparent); border-color: color-mix(in oklab, var(--c-success) 32%, transparent); }
+  .badge-warning { color: var(--c-warning); background: color-mix(in oklab, var(--c-warning) 14%, transparent); border-color: color-mix(in oklab, var(--c-warning) 34%, transparent); }
+  .badge-danger  { color: var(--c-danger);  background: color-mix(in oklab, var(--c-danger) 13%, transparent);  border-color: color-mix(in oklab, var(--c-danger) 34%, transparent); }
 
   /* ---- Skeleton ----------------------------------------------------- */
   .skeleton {
     background: linear-gradient(
       100deg,
       var(--c-muted) 30%,
-      color-mix(in oklab, var(--c-muted) 60%, var(--c-text-3)) 50%,
+      color-mix(in oklab, var(--c-muted) 55%, var(--c-text-3)) 50%,
       var(--c-muted) 70%
     );
     background-size: 200% 100%;
-    animation: arc-shimmer 1.4s ease-in-out infinite;
+    animation: arc-shimmer 1.5s ease-in-out infinite;
     border-radius: var(--radius-md);
   }
   @keyframes arc-shimmer {
@@ -416,18 +431,20 @@
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Hairline rule used for editorial section separation. */
+  .rule { border: 0; border-top: 1px solid var(--c-border); }
 }
 
 @keyframes arc-toast-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes arc-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 @keyframes arc-dialog-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes arc-sheet-in {
@@ -435,7 +452,6 @@
   to { transform: translateY(0); }
 }
 
-/* Respect reduced motion globally as a safety net. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

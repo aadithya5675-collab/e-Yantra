@@ -83,7 +83,7 @@ export function LeaderboardPage() {
   return (
     <div ref={containerRef} className="space-y-6">
       <div>
-        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Leaderboard</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">Leaderboard</h1>
         <p className="text-[14px] text-text-secondary mt-1">
           Verified official standings · <span className="text-text-primary">{activeThemeName}</span>
         </p>

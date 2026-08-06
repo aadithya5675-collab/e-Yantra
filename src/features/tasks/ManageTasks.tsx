@@ -110,7 +110,7 @@ export function ManageTasks() {
   return (
     <div className="space-y-8">
       <Reveal y={16}>
-        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Manage tasks</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">Manage tasks</h1>
         <p className="mt-1 text-[14.5px] text-text-secondary">Dispatch tasks to a theme and track progress across every team.</p>
       </Reveal>
 

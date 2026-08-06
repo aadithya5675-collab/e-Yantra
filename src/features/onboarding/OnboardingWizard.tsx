@@ -69,7 +69,7 @@ export function OnboardingWizard() {
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">
         <Loader2 className="mx-auto animate-spin text-accent mb-4" size={48} />
-        <h1 className="text-2xl font-bold text-primary-text sm:text-3xl mb-2">Waiting for Team Leader</h1>
+        <h1 className="font-display text-[30px] text-primary-text mb-2">Waiting for Team Leader</h1>
         <p className="text-secondary-text">
           Your profile has been created! Please wait for a Team Leader to select you as a member of their team from the Settings page.
         </p>
@@ -87,7 +87,7 @@ export function OnboardingWizard() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <header className="mb-8">
         <p className="font-mono text-xs uppercase tracking-widest text-accent">e-Yantra · Onboarding</p>
-        <h1 className="mt-1 text-2xl font-bold text-primary-text sm:text-3xl">
+        <h1 className="mt-1 font-display text-[30px] text-primary-text">
           {step === 'role' ? 'Welcome to ARC' : 'Form your team'}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-secondary-text">

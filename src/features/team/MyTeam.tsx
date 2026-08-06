@@ -54,7 +54,7 @@ export function MyTeam() {
   return (
     <div className="space-y-6">
       <Reveal y={16}>
-        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">My team</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">My team</h1>
         <p className="mt-1 text-[14.5px] text-text-secondary">Your roster and each member's task progress.</p>
       </Reveal>
 

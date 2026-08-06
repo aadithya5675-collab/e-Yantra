@@ -75,8 +75,8 @@ export function AppShell() {
       {/* ---- Desktop header ------------------------------------------- */}
       <header className="hidden lg:flex fixed top-0 right-0 left-64 h-16 items-center justify-between px-8 bg-canvas/85 backdrop-blur border-b border-hairline z-30">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.14em] text-text-muted">Mission Control</p>
-          <h1 className="text-[17px] font-semibold text-text-primary leading-tight">
+          <p className="font-mono text-[11px] tracking-[0.04em] text-text-muted">Mission Control</p>
+          <h1 className="font-display text-[22px] text-text-primary leading-tight">
             {current?.name ?? 'Overview'}
           </h1>
         </div>
@@ -161,21 +161,18 @@ function Brand() {
       <Logo />
       <div className="leading-tight">
         <p className="text-[14.5px] font-semibold tracking-tight text-text-primary">e-Yantra</p>
-        <p className="text-[10.5px] uppercase tracking-[0.12em] text-text-muted">e-Yantra Operations</p>
+        <p className="font-mono text-[10.5px] tracking-[0.03em] text-text-muted mt-0.5">e-Yantra Operations</p>
       </div>
     </div>
   );
 }
 
-/** Typographic ARC monogram — no fabricated institutional seal. */
+/** Flat cobalt-ruled ARC monogram — no gradient, no fabricated seal. */
 function Logo() {
   return (
     <span
-      className="grid place-items-center w-9 h-9 rounded-lg shrink-0 font-bold text-[13px] tracking-tight"
-      style={{
-        background: 'linear-gradient(135deg, var(--c-accent), var(--c-accent-2))',
-        color: 'var(--c-accent-contrast)',
-      }}
+      className="grid place-items-center w-9 h-9 rounded-[4px] shrink-0 font-mono font-medium text-[11px] tracking-tight border"
+      style={{ borderColor: 'var(--c-accent)', color: 'var(--c-accent)' }}
       aria-hidden="true"
     >
       ARC

@@ -71,7 +71,7 @@ export function Dashboard() {
   return (
     <div className="space-y-8">
       <Reveal y={16}>
-        <h1 className="text-[24px] font-semibold tracking-tight text-text-primary">Command centre</h1>
+        <h1 className="font-display text-[30px] tracking-tight text-text-primary">Command centre</h1>
         <p className="mt-1 text-[14.5px] text-text-secondary">
           Welcome back, {profile?.display_name}. Global overview across all seven themes.
         </p>
