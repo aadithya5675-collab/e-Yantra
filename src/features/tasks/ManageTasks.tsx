@@ -73,7 +73,7 @@ export function ManageTasks() {
 
       if (targetMembers.length === 0) return;
 
-      const numMarks = Number(marks) || 0;
+      const numMarks = leadersOnly ? (Number(marks) || 0) : 0;
 
       const newTasks = targetMembers.map(member => ({
         title,
@@ -102,7 +102,10 @@ export function ManageTasks() {
       setMarks('10');
       setStartDate('');
       setDueDate('');
-      toast(count ? `Task (${marks} marks) dispatched to ${count} team leader${count === 1 ? '' : 's'}.` : 'No eligible team leaders for that theme.', count ? 'success' : 'info');
+      const msg = leadersOnly
+        ? `Task (${marks} marks) dispatched to ${count} team leader${count === 1 ? '' : 's'}.`
+        : `Task dispatched to ${count} member${count === 1 ? '' : 's'}.`;
+      toast(count ? msg : 'No eligible targets for that theme.', count ? 'success' : 'info');
     },
     onError: () => toast('Could not dispatch task.', 'error'),
   });
@@ -188,10 +191,10 @@ export function ManageTasks() {
           </div>
 
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 ${leadersOnly ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
               <div className="field md:col-span-1">
                 <label htmlFor="mt-title" className="field-label">Task title</label>
-                <input id="mt-title" required value={title} onChange={e => setTitle(e.target.value)} className="arc-input" placeholder="e.g. Task 1 - Prototype" />
+                <input id="mt-title" required value={title} onChange={e => setTitle(e.target.value)} className="arc-input" placeholder={leadersOnly ? "e.g. Task 1 - Prototype" : "e.g. Robot chassis assembly"} />
               </div>
               <div className="field md:col-span-1">
                 <label htmlFor="mt-theme" className="field-label">Target theme</label>
@@ -200,12 +203,14 @@ export function ManageTasks() {
                   {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               </div>
-              <div className="field md:col-span-1">
-                <label htmlFor="mt-marks" className="field-label">
-                  Total Marks {leadersOnly && <span className="text-accent-color font-semibold">(Leader Score)</span>}
-                </label>
-                <input id="mt-marks" type="number" min="0" required value={marks} onChange={e => setMarks(e.target.value)} className="arc-input" placeholder="e.g. 10" />
-              </div>
+              {leadersOnly && (
+                <div className="field md:col-span-1">
+                  <label htmlFor="mt-marks" className="field-label">
+                    Total Marks <span className="text-accent-color font-semibold">(Leader Score)</span>
+                  </label>
+                  <input id="mt-marks" type="number" min="0" required value={marks} onChange={e => setMarks(e.target.value)} className="arc-input" placeholder="e.g. 10" />
+                </div>
+              )}
             </div>
 
             <div className="field">
