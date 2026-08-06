@@ -4,6 +4,9 @@
 ALTER TABLE public.teams 
 ADD COLUMN IF NOT EXISTS official_score NUMERIC DEFAULT 0 NOT NULL CHECK (official_score >= 0);
 
+ALTER TABLE public.tasks
+ADD COLUMN IF NOT EXISTS marks INTEGER DEFAULT 0 NOT NULL CHECK (marks >= 0);
+
 -- Example update statement (commented out per requirements):
 -- UPDATE public.teams SET official_score = 95.5 WHERE id = 1;
 

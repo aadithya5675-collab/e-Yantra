@@ -54,6 +54,8 @@ export function ManageTasks() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [themeId, setThemeId] = useState('');
+  const [marks, setMarks] = useState('10');
+  const [leadersOnly, setLeadersOnly] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
 
@@ -62,14 +64,23 @@ export function ManageTasks() {
       if (!themeId) return;
       const targetTheme = parseInt(themeId, 10);
       const themeTeams = teams.filter(t => t.theme_id === targetTheme).map(t => t.id);
-      const targetMembers = profiles.filter(p => p.team_id && themeTeams.includes(p.team_id));
+      
+      const targetMembers = profiles.filter(p => {
+        if (!p.team_id || !themeTeams.includes(p.team_id)) return false;
+        if (leadersOnly) return Boolean(p.is_leader);
+        return true;
+      });
+
       if (targetMembers.length === 0) return;
+
+      const numMarks = Number(marks) || 0;
 
       const newTasks = targetMembers.map(member => ({
         title,
         description,
         theme_id: targetTheme,
         assigned_to: member.id,
+        marks: numMarks,
         start_date: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
         due_date: dueDate || null,
         status: 'pending',
@@ -88,9 +99,10 @@ export function ManageTasks() {
       setTitle('');
       setDescription('');
       setThemeId('');
+      setMarks('10');
       setStartDate('');
       setDueDate('');
-      toast(count ? `Task dispatched to ${count} member${count === 1 ? '' : 's'}.` : 'No eligible members for that theme.', count ? 'success' : 'info');
+      toast(count ? `Task (${marks} marks) dispatched to ${count} team leader${count === 1 ? '' : 's'}.` : 'No eligible team leaders for that theme.', count ? 'success' : 'info');
     },
     onError: () => toast('Could not dispatch task.', 'error'),
   });
@@ -152,21 +164,47 @@ export function ManageTasks() {
       {/* Create */}
       <Reveal delay={0.05}>
         <section className="surface-card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em] text-text-muted mb-5">
-            <Plus size={16} /> Create task for a theme
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.1em] text-text-muted">
+              <Plus size={16} /> Create task for a theme
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setLeadersOnly(false)}
+                className={`chip ${!leadersOnly ? 'chip-active' : ''}`}
+              >
+                All Members
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeadersOnly(true)}
+                className={`chip ${leadersOnly ? 'chip-active' : ''}`}
+                style={leadersOnly ? { background: 'var(--c-accent-color)', color: '#04121a' } : undefined}
+              >
+                ★ Team Leaders Only (with Marks)
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="field">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="field md:col-span-1">
                 <label htmlFor="mt-title" className="field-label">Task title</label>
-                <input id="mt-title" required value={title} onChange={e => setTitle(e.target.value)} className="arc-input" placeholder="e.g. Robot chassis assembly" />
+                <input id="mt-title" required value={title} onChange={e => setTitle(e.target.value)} className="arc-input" placeholder="e.g. Task 1 - Prototype" />
               </div>
-              <div className="field">
+              <div className="field md:col-span-1">
                 <label htmlFor="mt-theme" className="field-label">Target theme</label>
                 <select id="mt-theme" required value={themeId} onChange={e => setThemeId(e.target.value)} className="arc-input">
                   <option value="">Select a theme…</option>
                   {themes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
+              </div>
+              <div className="field md:col-span-1">
+                <label htmlFor="mt-marks" className="field-label">
+                  Total Marks {leadersOnly && <span className="text-accent-color font-semibold">(Leader Score)</span>}
+                </label>
+                <input id="mt-marks" type="number" min="0" required value={marks} onChange={e => setMarks(e.target.value)} className="arc-input" placeholder="e.g. 10" />
               </div>
             </div>
 
@@ -186,9 +224,12 @@ export function ManageTasks() {
               </div>
             </div>
 
-            <div className="flex justify-end pt-1">
+            <div className="flex items-center justify-between pt-1 flex-wrap gap-3">
+              <p className="text-xs text-text-muted">
+                {leadersOnly ? '★ Task will be dispatched ONLY to Team Leaders of the chosen theme.' : 'Task will be dispatched to all members of the chosen theme.'}
+              </p>
               <Button type="submit" loading={createTask.isPending} className="w-full md:w-auto">
-                <Send size={16} /> Dispatch task
+                <Send size={16} /> {leadersOnly ? 'Dispatch Leader Task' : 'Dispatch Task'}
               </Button>
             </div>
           </form>
@@ -288,7 +329,10 @@ export function ManageTasks() {
                                                   </p>
                                                 )}
                                               </div>
-                                              <Badge tone={STATUS_TONE[task.status] ?? 'neutral'}>{String(task.status).replace('_', ' ')}</Badge>
+                                              <div className="flex items-center gap-2">
+                                                {task.marks > 0 && <Badge tone="accent">{task.marks} pts</Badge>}
+                                                <Badge tone={STATUS_TONE[task.status] ?? 'neutral'}>{String(task.status).replace('_', ' ')}</Badge>
+                                              </div>
                                             </div>
                                           ))
                                         )}

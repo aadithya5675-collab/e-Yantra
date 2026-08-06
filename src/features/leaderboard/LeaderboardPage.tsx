@@ -59,7 +59,7 @@ export function LeaderboardPage() {
       // Fetch completed tasks grouped by team using explicit relation to profiles
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
-        .select('id, assigned_to, status, assigned_profile:profiles!assigned_to(team_id)')
+        .select('id, assigned_to, status, marks, assigned_profile:profiles!assigned_to(team_id)')
         .eq('status', 'completed');
 
       if (taskError) {
@@ -67,11 +67,13 @@ export function LeaderboardPage() {
       }
 
       const teamTaskCounts: Record<number, number> = {};
+      const teamTaskMarks: Record<number, number> = {};
       if (taskData) {
         taskData.forEach((task: any) => {
           const tId = task.assigned_profile?.team_id;
           if (tId != null) {
             teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
+            teamTaskMarks[tId] = (teamTaskMarks[tId] || 0) + Number(task.marks || 0);
           }
         });
       }
@@ -84,12 +86,16 @@ export function LeaderboardPage() {
         }
         const leaderName = leaders[0]?.display_name || 'N/A';
 
+        const baseScore = Number(t.official_score ?? 0);
+        const taskMarks = Number(teamTaskMarks[t.id] || 0);
+        const totalScore = baseScore + taskMarks;
+
         return {
           team_id: Number(t.id),
           team_name: String(t.name || ''),
           arc_code: String(t.official_eyantra_id || 'N/A'),
           leader_name: leaderName,
-          official_score: Number(t.official_score ?? 0),
+          official_score: totalScore,
           completed_tasks: Number(teamTaskCounts[t.id] || 0),
           theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
         };

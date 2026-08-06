@@ -15,11 +15,15 @@ CREATE TABLE IF NOT EXISTS public.themes (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Insert some default themes
-INSERT INTO public.themes (slug, name, tagline, accent_color) VALUES 
-('space', 'Space Robotics', 'Reach for the stars', '#3B82F6'),
-('agri', 'AgriBot', 'Farming of the future', '#10B981'),
-('healthcare', 'MediBot', 'Saving lives with robotics', '#EF4444')
+-- Insert the 7 official e-Yantra themes
+INSERT INTO public.themes (id, slug, name, tagline, accent_color, display_order) OVERRIDING SYSTEM VALUE VALUES 
+(1, 'lq', 'Logic Quest', 'Theme 01', '#3B82F6', 1),
+(2, 'kd', 'Khoj-o-Drone', 'Theme 02', '#10B981', 2),
+(3, 'sc', 'Strata Cobot', 'Theme 03', '#EF4444', 3),
+(4, 'he', 'Hola The Explorer', 'Theme 04', '#F59E0B', 4),
+(5, 'nv', 'Niti Vahan', 'Theme 05', '#8B5CF6', 5),
+(6, 'eb', 'Echo Balancer', 'Theme 06', '#EC4899', 6),
+(7, 'pb', 'PacBot', 'Theme 07', '#14B8A6', 7)
 ON CONFLICT (slug) DO NOTHING;
 
 -- 2. Create Teams Table

@@ -33,6 +33,7 @@ export interface Task {
   delay_reason: string | null;
   theme_id: number | null;
   alarm_acknowledged: boolean;
+  marks?: number | null;
   created_by: string;
   created_at: string;
   updated_at: string;

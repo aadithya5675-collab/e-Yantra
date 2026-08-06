@@ -220,7 +220,7 @@ export function OnboardingWizard() {
                 <input
                   id="officialId"
                   className="arc-input w-full"
-                  placeholder="e.g. EYRC-2026-1234"
+                  placeholder=""
                   value={officialId}
                   onChange={(e) => setOfficialId(e.target.value)}
                 />

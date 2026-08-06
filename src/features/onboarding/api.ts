@@ -32,7 +32,10 @@ export function useThemes() {
     queryFn: async (): Promise<Theme[]> => {
       const { data, error } = await supabase.from('themes').select('*').order('display_order');
       if (error) throw error;
-      return z.array(themeSchema).parse(data);
+      const parsed = z.array(themeSchema).parse(data);
+      // Filter out legacy sample themes if present
+      const official = parsed.filter(t => !['space', 'agri', 'healthcare'].includes(t.slug));
+      return official.length > 0 ? official : parsed;
     },
     staleTime: 5 * 60_000,
   });

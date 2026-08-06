@@ -146,6 +146,11 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
                 {task.due_time && ` · ${task.due_time.slice(0, 5)}`}
               </span>
             )}
+            {Boolean(task.marks) && (
+              <span className="px-1.5 py-0.5 rounded font-semibold text-accent-color bg-accent-color/10">
+                {task.marks} pts
+              </span>
+            )}
 
           </div>
 
