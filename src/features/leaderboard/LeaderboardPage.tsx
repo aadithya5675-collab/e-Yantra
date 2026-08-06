@@ -4,6 +4,7 @@ import { CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 import { useAuth } from '../auth/AuthContext';
+import { useThemes } from '../onboarding/api';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState, ErrorState } from '../../components/ui/primitives';
 
@@ -25,15 +26,11 @@ export function LeaderboardPage() {
   // Non-admins always see their own theme's leaderboard.
   const activeThemeId = isAdmin ? selectedTheme : themeId?.toString() || '1';
 
-  const { data: themes = FALLBACK_THEMES } = useQuery({
-    queryKey: ['themes-list'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('themes').select('id, name').order('id');
-      if (error || !data?.length) return FALLBACK_THEMES;
-      return data.map((t: any) => ({ id: String(t.id), name: t.name }));
-    },
-    staleTime: 5 * 60_000,
-  });
+  const { data: rawThemes } = useThemes();
+  const themes = useMemo(() => {
+    if (!rawThemes?.length) return FALLBACK_THEMES;
+    return rawThemes.map(t => ({ id: String(t.id), name: t.name }));
+  }, [rawThemes]);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['leaderboard', activeThemeId],
