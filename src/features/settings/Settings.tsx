@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/ui/primitives';
 import { useToast } from '../../components/ui/Toast';
 import { useTheme } from '../../lib/theme';
 import { Reveal } from '../../components/motion/Reveal';
-import { LogOut, Moon, Sun, Key, Bell, BellOff, Users, UserPlus, Palette } from 'lucide-react';
+import { LogOut, Moon, Sun, Key, Bell, BellOff, Users, UserPlus, UserMinus, Palette, Save } from 'lucide-react';
 
 export function Settings() {
   const { profile, signOut } = useAuth();
@@ -29,53 +29,54 @@ export function Settings() {
     if (!profile) return;
     const newVal = !notificationsEnabled;
     setNotificationsEnabled(newVal);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ notifications_enabled: newVal })
-      .eq('id', profile.id);
-    if (error) {
-      console.error(error);
+    const { error: err } = await supabase.from('profiles').update({ notifications_enabled: newVal }).eq('id', profile.id);
+    if (err) {
       setNotificationsEnabled(!newVal);
-      toast('Could not update notifications', 'error');
+      toast('Could not update notification preferences', 'error');
     } else {
-      toast(newVal ? 'Notifications on' : 'Notifications off', 'success');
+      toast(newVal ? 'Notifications enabled' : 'Notifications muted', 'success');
     }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (password.length < 6) { setError('At least 6 characters'); return; }
-    if (password !== confirm) { setError('Passwords do not match'); return; }
-
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Passwords do not match.');
+      return;
+    }
     setSavingPassword(true);
+    setError('');
     const { error: err } = await supabase.auth.updateUser({ password });
     setSavingPassword(false);
-    if (err) { setError(err.message); return; }
-
-    setPassword('');
-    setConfirm('');
-    setIsChangingPassword(false);
-    toast('Password updated', 'success');
+    if (err) {
+      setError(err.message);
+    } else {
+      toast('Password updated successfully', 'success');
+      setIsChangingPassword(false);
+      setPassword('');
+      setConfirm('');
+    }
   };
 
   const roleLabel = profile?.is_leader ? 'Team Leader' : profile?.role === 'admin' ? 'Admin' : 'Team Member';
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Reveal className="mb-8" y={16}>
+      <Reveal className="mb-6" y={16}>
         <h1 className="font-display text-[30px] tracking-tight text-text-primary">Settings</h1>
-        <p className="mt-1 text-[14.5px] text-text-secondary">
-          {profile?.display_name} · {roleLabel}
-        </p>
+        <p className="mt-1 text-[14.5px] text-text-secondary">Manage your preferences, security, and team options.</p>
       </Reveal>
 
-      <Reveal className="space-y-8">
+      <Reveal className="space-y-8" delay={0.05}>
         {/* Appearance */}
         <Section title="Appearance" icon={<Palette size={16} />}>
           <Row
-            title="Theme"
-            detail={theme === 'dark' ? 'Dark — aerospace command centre' : 'Light — daytime operations'}
+            title="Theme mode"
+            detail={theme === 'dark' ? 'Dark theme' : 'Light theme'}
             action={
               <Button variant="secondary" size="sm" onClick={toggleTheme}>
                 {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
@@ -151,94 +152,173 @@ export function Settings() {
 
 function TeamManagement({ teamId }: { teamId: number }) {
   const { toast } = useToast();
-  const [members, setMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [currentMembers, setCurrentMembers] = useState<any[]>([]);
+  const [availableMembers, setAvailableMembers] = useState<any[]>([]);
+  const [teamName, setTeamName] = useState('');
   const [teamCode, setTeamCode] = useState('');
-  const [savingCode, setSavingCode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [savingDetails, setSavingDetails] = useState(false);
 
-  const fetchMembersAndTeam = async () => {
+  const fetchTeamData = async () => {
     setLoading(true);
-    const [profilesRes, teamRes] = await Promise.all([
+    const [teamRes, teamMembersRes, unassignedRes] = await Promise.all([
+      supabase.from('teams').select('name, official_eyantra_id').eq('id', teamId).single(),
+      supabase.from('profiles').select('*').eq('team_id', teamId),
       supabase.from('profiles').select('*').is('team_id', null),
-      supabase.from('teams').select('official_eyantra_id').eq('id', teamId).single(),
     ]);
 
-    if (profilesRes.data) {
-      setMembers(profilesRes.data.filter(p => !p.is_leader && p.role !== 'admin'));
-    }
     if (teamRes.data) {
+      setTeamName(teamRes.data.name || '');
       setTeamCode(teamRes.data.official_eyantra_id || '');
+    }
+    if (teamMembersRes.data) {
+      setCurrentMembers(teamMembersRes.data);
+    }
+    if (unassignedRes.data) {
+      setAvailableMembers(unassignedRes.data.filter(p => !p.is_leader && p.role !== 'admin'));
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchMembersAndTeam();
+    fetchTeamData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
-  const addMember = async (userId: string) => {
-    const { error } = await supabase.from('profiles').update({ team_id: teamId }).eq('id', userId);
-    if (!error) { toast('Member added to your team', 'success'); fetchMembersAndTeam(); }
-    else toast('Could not add member', 'error');
-  };
-
-  const saveTeamCode = async (e: React.FormEvent) => {
+  const saveTeamDetails = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingCode(true);
+    if (!teamName.trim()) {
+      toast('Team name cannot be empty', 'error');
+      return;
+    }
+    setSavingDetails(true);
     const { error } = await supabase
       .from('teams')
-      .update({ official_eyantra_id: teamCode.trim() || null })
+      .update({
+        name: teamName.trim(),
+        official_eyantra_id: teamCode.trim() || null,
+      })
       .eq('id', teamId);
-    setSavingCode(false);
+    setSavingDetails(false);
 
     if (error) {
-      toast('Could not update e-Yantra team code', 'error');
+      toast('Could not update team details', 'error');
     } else {
-      toast('e-Yantra team code updated', 'success');
+      toast('Team details updated successfully', 'success');
+    }
+  };
+
+  const addMember = async (userId: string) => {
+    if (currentMembers.length >= 4) {
+      toast('Teams can have a maximum of 4 members.', 'error');
+      return;
+    }
+    const { error } = await supabase.from('profiles').update({ team_id: teamId }).eq('id', userId);
+    if (!error) {
+      toast('Member added to your team', 'success');
+      fetchTeamData();
+    } else {
+      toast('Could not add member', 'error');
+    }
+  };
+
+  const removeMember = async (userId: string) => {
+    const { error } = await supabase.from('profiles').update({ team_id: null }).eq('id', userId);
+    if (!error) {
+      toast('Member removed from your team', 'success');
+      fetchTeamData();
+    } else {
+      toast('Could not remove member', 'error');
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* Official e-Yantra Team Code Edit Card */}
+      {/* Team Details Edit Card */}
       <div className="surface-card p-5">
-        <p className="text-[15px] font-medium text-text-primary mb-1">e-Yantra Team Code</p>
-        <p className="text-[13px] text-text-secondary mb-4">Set or update your team's official e-Yantra ID (e.g. EYRC-2026-1234).</p>
-        <form onSubmit={saveTeamCode} className="flex gap-3 items-center flex-wrap">
+        <p className="text-[15px] font-medium text-text-primary mb-1">Team Details</p>
+        <p className="text-[13px] text-text-secondary mb-4">Update your team name and official e-Yantra team code.</p>
+        <form onSubmit={saveTeamDetails} className="space-y-3 max-w-md">
           <Input
-            placeholder="Enter e-Yantra Team Code"
+            label="Team Name"
+            placeholder="Enter Team Name"
+            value={teamName}
+            onChange={e => setTeamName(e.target.value)}
+            required
+          />
+          <Input
+            label="e-Yantra Team Code"
+            placeholder="e.g. EYRC-2026-1234"
             value={teamCode}
             onChange={e => setTeamCode(e.target.value)}
-            className="max-w-xs"
           />
-          <Button type="submit" size="sm" loading={savingCode}>
-            Save Team Code
+          <Button type="submit" size="sm" loading={savingDetails}>
+            <Save size={15} /> Save Team Details
           </Button>
         </form>
       </div>
 
-      {/* Team Members List Card */}
+      {/* Team Roster Card (Max 4 members) */}
       <div className="surface-card p-5">
-        <p className="text-[15px] font-medium text-text-primary mb-1">Add Team Members</p>
-        <p className="text-[13px] text-text-secondary mb-4">Add available registered members to your team.</p>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <p className="text-[15px] font-medium text-text-primary">Team Roster</p>
+          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${currentMembers.length >= 4 ? 'bg-warning-color/20 text-warning-color' : 'bg-accent-color/10 text-accent-color'}`}>
+            {currentMembers.length} / 4 Members
+          </span>
+        </div>
+        <p className="text-[13px] text-text-secondary mb-4">Manage current members in your team (Maximum 4 members allowed).</p>
+
         {loading ? (
-          <div className="flex items-center gap-3 text-sm text-text-secondary"><Spinner size={18} /> Loading available members…</div>
-        ) : members.length === 0 ? (
-          <EmptyState icon={<Users size={28} />} title="No available members" description="Everyone is currently assigned to a team." />
+          <div className="flex items-center gap-3 text-sm text-text-secondary"><Spinner size={18} /> Loading team members…</div>
         ) : (
-          <div className="space-y-2">
-            {members.map(member => (
-              <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-hairline bg-muted/40">
+          <div className="space-y-2 mb-6">
+            {currentMembers.map(member => (
+              <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-hairline bg-surface">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">{member.display_name || member.full_name || member.username}</p>
+                  <p className="text-sm font-medium text-text-primary truncate">
+                    {member.display_name || member.full_name || member.username}
+                    {member.is_leader && <span className="ml-2 text-xs font-normal text-accent-color">(Team Leader)</span>}
+                  </p>
                   <p className="text-xs text-text-muted truncate">{member.email}</p>
                 </div>
-                <Button size="sm" onClick={() => addMember(member.id)}><UserPlus size={15} /> Add</Button>
+                {!member.is_leader && (
+                  <Button size="sm" variant="danger" onClick={() => removeMember(member.id)}>
+                    <UserMinus size={15} /> Remove
+                  </Button>
+                )}
               </div>
             ))}
           </div>
         )}
+
+        {/* Add New Member Sub-section */}
+        <div className="pt-4 border-t border-hairline">
+          <p className="text-[14px] font-medium text-text-primary mb-1">Add Available Members</p>
+          {currentMembers.length >= 4 ? (
+            <p className="text-[13px] text-warning-color font-medium">Team limit reached (4/4 members). Remove a member to add someone else.</p>
+          ) : (
+            <>
+              <p className="text-[13px] text-text-secondary mb-3">Add unassigned registered members to your team.</p>
+              {availableMembers.length === 0 ? (
+                <EmptyState icon={<Users size={28} />} title="No available members" description="All registered users are currently assigned to teams." />
+              ) : (
+                <div className="space-y-2">
+                  {availableMembers.map(member => (
+                    <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border border-hairline bg-muted/40">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{member.display_name || member.full_name || member.username}</p>
+                        <p className="text-xs text-text-muted truncate">{member.email}</p>
+                      </div>
+                      <Button size="sm" onClick={() => addMember(member.id)}>
+                        <UserPlus size={15} /> Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
