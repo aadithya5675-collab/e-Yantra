@@ -7,13 +7,13 @@ ADD COLUMN IF NOT EXISTS official_score NUMERIC DEFAULT 0 NOT NULL CHECK (offici
 -- Example update statement (commented out per requirements):
 -- UPDATE public.teams SET official_score = 95.5 WHERE id = 1;
 
--- Protect official_score from being updated by non-admins
+-- Protect official_score so only team leaders can update it
 CREATE OR REPLACE FUNCTION public.protect_official_score()
 RETURNS trigger AS $$
 BEGIN
   IF NEW.official_score IS DISTINCT FROM OLD.official_score THEN
-    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin') THEN
-      RAISE EXCEPTION 'Only administrators can update official_score';
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND team_id = NEW.id AND is_leader = true) THEN
+      RAISE EXCEPTION 'Only the team leader can update the official_score';
     END IF;
   END IF;
   RETURN NEW;
