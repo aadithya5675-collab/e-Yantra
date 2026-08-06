@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
-import { Plus, Clock, ChevronDown, Send } from 'lucide-react';
+import { useDeleteTask } from './api';
+import { Plus, Clock, ChevronDown, Send, Trash2 } from 'lucide-react';
 import { Reveal } from '../../components/motion/Reveal';
 import { Button } from '../../components/ui/Button';
 import { Segmented, Badge } from '../../components/ui/primitives';
@@ -20,6 +21,7 @@ export function ManageTasks() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const deleteTask = useDeleteTask();
   const { data: themes = [] } = useThemes();
 
   const { data: teams = [] } = useQuery({
@@ -343,6 +345,18 @@ export function ManageTasks() {
                                                   </Badge>
                                                 )}
                                                 <Badge tone={STATUS_TONE[task.status] ?? 'neutral'}>{String(task.status).replace('_', ' ')}</Badge>
+                                                <button 
+                                                  className="p-1.5 text-text-muted hover:text-danger-color hover:bg-danger-color/10 rounded-md transition-colors ml-2"
+                                                  onClick={() => {
+                                                    if (window.confirm(`Are you sure you want to delete the task "${task.title}"?`)) {
+                                                      deleteTask.mutate(task.id);
+                                                      toast('Task deleted', 'success');
+                                                    }
+                                                  }}
+                                                  title="Delete task"
+                                                >
+                                                  <Trash2 size={15} />
+                                                </button>
                                               </div>
                                             </div>
                                           ))

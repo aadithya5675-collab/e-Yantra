@@ -24,6 +24,7 @@ export function AppShell() {
       ]
     : [
         { name: 'My Team', path: '/my-team', icon: Users },
+        { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
         { name: 'My Tasks', path: '/my-tasks', icon: ClipboardList },
         { name: 'Announcements', path: '/announcements', icon: Megaphone },
         { name: 'Settings', path: '/settings', icon: SettingsIcon },

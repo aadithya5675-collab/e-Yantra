@@ -86,7 +86,7 @@ function App() {
                 </ProtectedRoute>
               }>
                 <Route index element={<IndexRoute />} />
-                <Route path="leaderboard" element={<AdminRoute><LeaderboardPage /></AdminRoute>} />
+                <Route path="leaderboard" element={<LeaderboardPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
                 <Route path="my-team" element={<MemberRoute><MyTeam /></MemberRoute>} />
                 <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />
