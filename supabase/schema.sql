@@ -1,4 +1,4 @@
--- ARC Mission Control Supabase Schema
+-- e-Yantra Supabase Schema
 -- Run this in the Supabase SQL Editor
 
 -- 1. Create Themes Table

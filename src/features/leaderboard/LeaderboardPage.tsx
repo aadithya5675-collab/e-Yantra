@@ -47,7 +47,6 @@ export function LeaderboardPage() {
           status, 
           created_by,
           official_score,
-          arc_points,
           theme:themes!inner(id, name, slug),
           team_members:profiles!team_id(id, display_name, is_leader)
         `);
@@ -91,7 +90,6 @@ export function LeaderboardPage() {
           arc_code: String(t.official_eyantra_id || 'N/A'),
           leader_name: leaderName,
           official_score: Number(t.official_score ?? 0),
-          arc_points: Number(t.arc_points ?? 0),
           completed_tasks: Number(teamTaskCounts[t.id] || 0),
           theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
         };
@@ -120,9 +118,6 @@ export function LeaderboardPage() {
       [...(data || [])].sort((a, b) => {
         if (b.official_score !== a.official_score) {
           return b.official_score - a.official_score;
-        }
-        if (b.arc_points !== a.arc_points) {
-          return b.arc_points - a.arc_points;
         }
         if (b.completed_tasks !== a.completed_tasks) {
           return b.completed_tasks - a.completed_tasks;
@@ -201,7 +196,6 @@ export function LeaderboardPage() {
                     <th scope="col" className="py-3 px-4">Theme</th>
                     <th scope="col" className="py-3 px-4">Leader</th>
                     <th scope="col" className="py-3 px-4 text-center">Verified tasks</th>
-                    <th scope="col" className="py-3 px-4 text-right">ARC points</th>
                     <th scope="col" className="py-3 px-4 text-right">Official score</th>
                   </tr>
                 </thead>
@@ -217,9 +211,6 @@ export function LeaderboardPage() {
                       <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.leader_name || '—'}</td>
                       <td className="py-3.5 px-4 text-center">
                         <span className="badge badge-success"><CheckCircle2 size={13} />{t.completed_tasks}</span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-medium text-text-secondary tabular">
-                        {t.arc_points} <span className="text-text-muted text-xs">pts</span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-semibold text-text-primary tabular">
                         {t.official_score.toFixed(1)} <span className="text-text-muted text-xs">pts</span>
@@ -244,7 +235,6 @@ export function LeaderboardPage() {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-semibold text-text-primary tabular">{t.official_score.toFixed(1)} <span className="text-[11px] font-normal text-text-muted">pts</span></p>
-                  <p className="text-[11px] text-accent-color tabular">{t.arc_points} ARC</p>
                 </div>
               </div>
             ))}

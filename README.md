@@ -1,4 +1,4 @@
-# ARC Mission Control (e-Yantra)
+# e-Yantra
 
 A specialized dashboard and team management application for e-Yantra's ARC teams, built to handle team creation, task tracking, leaderboards, and announcements.
 

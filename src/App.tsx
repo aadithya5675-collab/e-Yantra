@@ -15,7 +15,7 @@ const MyTeam = lazy(() => import('./features/team/MyTeam').then(m => ({ default:
 const MyTasks = lazy(() => import('./features/tasks/MyTasks').then(m => ({ default: m.MyTasks })));
 const ManageTasks = lazy(() => import('./features/tasks/ManageTasks').then(m => ({ default: m.ManageTasks })));
 const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
-// ARC Mission Control — single-theme team onboarding wizard.
+// e-Yantra — single-theme team onboarding wizard.
 const OnboardingWizard = lazy(() => import('./features/onboarding/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
 
 const queryClient = new QueryClient({

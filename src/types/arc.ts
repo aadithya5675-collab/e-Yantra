@@ -1,4 +1,4 @@
-// ARC Mission Control domain types — mirror the Laravel /api/v1 resources.
+// e-Yantra domain types — mirror the Laravel /api/v1 resources.
 
 export type UserRole = 'admin' | 'mentor' | 'member';
 export type ProfileStatus = 'pending_approval' | 'approved' | 'rejected' | 'suspended';
@@ -69,7 +69,6 @@ export interface Team {
   leader?: DirectoryProfile;
   members?: TeamMembership[];
   official_score?: number;
-  arc_points?: number;
   created_at: string | null;
 }
 
