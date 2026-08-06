@@ -68,7 +68,8 @@ export interface Team {
   theme?: Theme;
   leader?: DirectoryProfile;
   members?: TeamMembership[];
-  member_count?: number;
+  official_score?: number;
+  arc_points?: number;
   created_at: string | null;
 }
 

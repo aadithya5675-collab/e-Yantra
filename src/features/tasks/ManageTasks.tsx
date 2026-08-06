@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
@@ -83,6 +83,8 @@ export function ManageTasks() {
     },
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['admin-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
       setTitle('');
       setDescription('');
       setThemeId('');
@@ -99,28 +101,44 @@ export function ManageTasks() {
     createTask.mutate();
   };
 
-  const getTaskCategory = (task: any) => {
-    if (task.status === 'completed') return 'past';
-    
-    const now = new Date().getTime();
-    const startStr = task.start_date || task.created_at;
-    const start = startStr ? new Date(startStr).getTime() : 0;
-    
-    let due = null;
+  const nowMs = useMemo(() => Date.now(), []);
+
+  const getTaskCategory = (task: any, currentMs: number = nowMs): 'upcoming' | 'ongoing' | 'past' => {
+    let startMs = 0;
+    if (task.start_date) {
+      const s = new Date(task.start_date).getTime();
+      if (!isNaN(s)) startMs = s;
+    } else if (task.created_at) {
+      const c = new Date(task.created_at).getTime();
+      if (!isNaN(c)) startMs = c;
+    }
+
+    let dueMs: number | null = null;
     if (task.due_date) {
       const d = new Date(task.due_date);
-      if (task.due_time) {
-        const [h, m] = task.due_time.split(':').map(Number);
-        d.setHours(h, m, 59, 999);
-      } else {
-        d.setHours(23, 59, 59, 999);
+      if (!isNaN(d.getTime())) {
+        if (task.due_time && typeof task.due_time === 'string') {
+          const [h, m] = task.due_time.split(':').map(Number);
+          if (!isNaN(h) && !isNaN(m)) {
+            d.setHours(h, m, 59, 999);
+          } else {
+            d.setHours(23, 59, 59, 999);
+          }
+        } else {
+          d.setHours(23, 59, 59, 999);
+        }
+        dueMs = d.getTime();
       }
-      due = d.getTime();
     }
-    
-    if (due && now > due) return 'past';
-    if (now < start) return 'upcoming';
-    
+
+    // Predicates:
+    // 1. Upcoming: startMs > currentMs
+    if (startMs > currentMs) return 'upcoming';
+
+    // 2. Past: due date exists and current time is strictly after due end time
+    if (dueMs !== null && currentMs > dueMs) return 'past';
+
+    // 3. Ongoing: active interval (start <= now && (due == null || now <= due))
     return 'ongoing';
   };
 
@@ -232,7 +250,7 @@ export function ManageTasks() {
                           {teamOpen && (
                             <div className="px-3 pb-3 divide-y divide-[var(--c-border)]">
                               {teamMembers.map(member => {
-                                const memberTasks = tasks.filter(t => t.assigned_to === member.id && getTaskCategory(t) === activeTab);
+                                const memberTasks = tasks.filter(t => t.assigned_to === member.id && getTaskCategory(t, nowMs) === activeTab);
                                 const memberOpen = expandedMember === member.id;
                                 return (
                                   <div key={member.id} className="py-2.5 first:pt-1">

@@ -28,6 +28,10 @@ export function useUpdateTask() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['admin-tasks'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard'] });
+    },
   });
 }

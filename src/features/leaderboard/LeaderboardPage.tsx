@@ -45,40 +45,54 @@ export function LeaderboardPage() {
           name, 
           official_eyantra_id, 
           status, 
-          created_by, 
+          created_by,
+          official_score,
+          arc_points,
           theme:themes!inner(id, name, slug),
-          profiles:profiles(display_name, is_leader)
+          team_members:profiles!team_id(id, display_name, is_leader)
         `);
       if (activeThemeId) query = query.eq('theme_id', activeThemeId);
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      // Fetch real completed task counts per team by checking member assignments
-      // or directly by theme if it's 1:1. Using assigned_to -> profile -> team_id is safer.
-      const { data: taskData } = await supabase
+      const { data: teamsData, error: teamsError } = await query;
+      if (teamsError) {
+        throw new Error(`Leaderboard teams query failed: ${teamsError.message}`);
+      }
+
+      // Fetch completed tasks grouped by team using explicit relation to profiles
+      const { data: taskData, error: taskError } = await supabase
         .from('tasks')
-        .select('assigned_to, status, profiles:profiles!inner(team_id)')
+        .select('id, assigned_to, status, assigned_profile:profiles!assigned_to(team_id)')
         .eq('status', 'completed');
-        
+
+      if (taskError) {
+        throw new Error(`Leaderboard completed tasks query failed: ${taskError.message}`);
+      }
+
       const teamTaskCounts: Record<number, number> = {};
       if (taskData) {
         taskData.forEach((task: any) => {
-          const tId = task.profiles?.team_id;
-          if (tId) teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
+          const tId = task.assigned_profile?.team_id;
+          if (tId != null) {
+            teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
+          }
         });
       }
 
-      return (data || []).map((t: any) => {
-        const leader = Array.isArray(t.profiles) ? t.profiles.find((p: any) => p.is_leader) : null;
-        
+      return (teamsData || []).map((t: any) => {
+        const members = Array.isArray(t.team_members) ? t.team_members : [];
+        const leaders = members.filter((p: any) => Boolean(p.is_leader));
+        if (leaders.length > 1) {
+          console.warn(`Team ${t.id} (${t.name}) has ${leaders.length} leaders assigned.`);
+        }
+        const leaderName = leaders[0]?.display_name || 'N/A';
+
         return {
-          team_id: t.id,
-          team_name: t.name,
-          arc_code: t.official_eyantra_id || 'N/A',
-          leader_name: leader?.display_name || 'N/A',
-          official_score: 0, // Genuinely missing from schema. Left as 0 per instructions.
-          arc_points: 0, // Genuinely missing from schema. Left as 0 per instructions.
-          completed_tasks: teamTaskCounts[t.id] || 0,
+          team_id: Number(t.id),
+          team_name: String(t.name || ''),
+          arc_code: String(t.official_eyantra_id || 'N/A'),
+          leader_name: leaderName,
+          official_score: Number(t.official_score ?? 0),
+          arc_points: Number(t.arc_points ?? 0),
+          completed_tasks: Number(teamTaskCounts[t.id] || 0),
           theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
         };
       });
@@ -102,7 +116,19 @@ export function LeaderboardPage() {
   );
 
   const sorted = useMemo(
-    () => [...(data || [])].sort((a, b) => b.official_score - a.official_score),
+    () =>
+      [...(data || [])].sort((a, b) => {
+        if (b.official_score !== a.official_score) {
+          return b.official_score - a.official_score;
+        }
+        if (b.arc_points !== a.arc_points) {
+          return b.arc_points - a.arc_points;
+        }
+        if (b.completed_tasks !== a.completed_tasks) {
+          return b.completed_tasks - a.completed_tasks;
+        }
+        return a.team_name.localeCompare(b.team_name);
+      }),
     [data]
   );
 
@@ -175,6 +201,7 @@ export function LeaderboardPage() {
                     <th scope="col" className="py-3 px-4">Theme</th>
                     <th scope="col" className="py-3 px-4">Leader</th>
                     <th scope="col" className="py-3 px-4 text-center">Verified tasks</th>
+                    <th scope="col" className="py-3 px-4 text-right">ARC points</th>
                     <th scope="col" className="py-3 px-4 text-right">Official score</th>
                   </tr>
                 </thead>
@@ -190,6 +217,9 @@ export function LeaderboardPage() {
                       <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.leader_name || '—'}</td>
                       <td className="py-3.5 px-4 text-center">
                         <span className="badge badge-success"><CheckCircle2 size={13} />{t.completed_tasks}</span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-medium text-text-secondary tabular">
+                        {t.arc_points} <span className="text-text-muted text-xs">pts</span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-semibold text-text-primary tabular">
                         {t.official_score.toFixed(1)} <span className="text-text-muted text-xs">pts</span>
@@ -213,8 +243,8 @@ export function LeaderboardPage() {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-semibold text-text-primary tabular">{t.official_score.toFixed(1)}</p>
-                  <p className="text-[11px] text-text-muted">pts</p>
+                  <p className="font-semibold text-text-primary tabular">{t.official_score.toFixed(1)} <span className="text-[11px] font-normal text-text-muted">pts</span></p>
+                  <p className="text-[11px] text-accent-color tabular">{t.arc_points} ARC</p>
                 </div>
               </div>
             ))}
