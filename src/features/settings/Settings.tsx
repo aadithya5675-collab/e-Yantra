@@ -62,7 +62,6 @@ export function Settings() {
     }
   };
 
-  const roleLabel = profile?.is_leader ? 'Team Leader' : profile?.role === 'admin' ? 'Admin' : 'Team Member';
 
   return (
     <div className="max-w-2xl mx-auto">
