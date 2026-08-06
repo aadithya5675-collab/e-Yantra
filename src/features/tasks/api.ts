@@ -6,6 +6,7 @@ export function useTasks(filters?: { assigned_to?: string; theme_id?: number }) 
   return useQuery({
     queryKey: ['tasks', filters],
     queryFn: async () => {
+      if (filters && 'assigned_to' in filters && !filters.assigned_to) return [];
       let q = supabase
         .from('tasks')
         .select('*, assigned_profile:profiles!assigned_to(*)')

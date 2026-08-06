@@ -335,7 +335,13 @@ export function ManageTasks() {
                                                 )}
                                               </div>
                                               <div className="flex items-center gap-2">
-                                                {task.marks > 0 && <Badge tone="accent">{task.marks} pts</Badge>}
+                                                {task.marks > 0 && (
+                                                  <Badge tone="accent">
+                                                    {task.obtained_marks !== null && task.obtained_marks !== undefined
+                                                      ? `${task.obtained_marks} / ${task.marks} pts`
+                                                      : `Max: ${task.marks} pts`}
+                                                  </Badge>
+                                                )}
                                                 <Badge tone={STATUS_TONE[task.status] ?? 'neutral'}>{String(task.status).replace('_', ' ')}</Badge>
                                               </div>
                                             </div>

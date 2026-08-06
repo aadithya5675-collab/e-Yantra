@@ -7,8 +7,8 @@ import { EmptyState, Skeleton } from '../../components/ui/primitives';
 import type { Task } from '../../types';
 
 export function MyTasks() {
-  const { themeId } = useAuth();
-  const { data: tasks, isLoading } = useTasks({ theme_id: themeId || undefined });
+  const { user } = useAuth();
+  const { data: tasks, isLoading } = useTasks({ assigned_to: user?.id });
 
   const inProgress = tasks?.filter(t => t.status === 'in_progress') ?? [];
   const completed = tasks?.filter(t => t.status === 'completed') ?? [];

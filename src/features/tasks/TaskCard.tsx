@@ -43,10 +43,22 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
 
   const [dueDate, setDueDate] = useState(task.due_date ?? '');
   const [dueTime, setDueTime] = useState(task.due_time ?? '');
+  const [obtainedMarks, setObtainedMarks] = useState<string>(
+    task.obtained_marks !== null && task.obtained_marks !== undefined
+      ? String(task.obtained_marks)
+      : String(task.marks ?? '')
+  );
 
   const saveDueDate = () => {
     if (dueDate !== (task.due_date ?? '') || dueTime !== (task.due_time ?? '')) {
       updateTask.mutate({ id: task.id, due_date: dueDate || null, due_time: dueTime || null });
+    }
+  };
+
+  const saveObtainedMarks = () => {
+    const val = obtainedMarks === '' ? null : Number(obtainedMarks);
+    if (val !== (task.obtained_marks ?? null)) {
+      updateTask.mutate({ id: task.id, obtained_marks: val });
     }
   };
 
@@ -148,7 +160,9 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
             )}
             {Boolean(task.marks) && (
               <span className="px-1.5 py-0.5 rounded font-semibold text-accent-color bg-accent-color/10">
-                {task.marks} pts
+                {task.obtained_marks !== null && task.obtained_marks !== undefined
+                  ? `${task.obtained_marks} / ${task.marks} pts`
+                  : `Max: ${task.marks} pts`}
               </span>
             )}
 
@@ -174,6 +188,25 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
                     <p className="text-[13px] leading-relaxed text-text-secondary">
                       {task.description}
                     </p>
+                  )}
+
+                  {Boolean(task.marks) && canUpdate && (
+                    <label className="field">
+                      <span className="field-label flex items-center justify-between">
+                        <span>Points Gained / Marks Obtained</span>
+                        <span className="text-accent-color font-semibold">Max: {task.marks} pts</span>
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max={task.marks ?? 100}
+                        className="arc-input text-[13px]"
+                        placeholder={`e.g. ${task.marks}`}
+                        value={obtainedMarks}
+                        onChange={e => setObtainedMarks(e.target.value)}
+                        onBlur={saveObtainedMarks}
+                      />
+                    </label>
                   )}
 
                   {canUpdate && (

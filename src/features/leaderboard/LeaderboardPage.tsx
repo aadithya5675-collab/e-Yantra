@@ -59,7 +59,7 @@ export function LeaderboardPage() {
       // Fetch completed tasks grouped by team using explicit relation to profiles
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
-        .select('id, assigned_to, status, marks, assigned_profile:profiles!assigned_to(team_id)')
+        .select('id, assigned_to, status, marks, obtained_marks, assigned_profile:profiles!assigned_to(team_id)')
         .eq('status', 'completed');
 
       if (taskError) {
@@ -73,7 +73,10 @@ export function LeaderboardPage() {
           const tId = task.assigned_profile?.team_id;
           if (tId != null) {
             teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
-            teamTaskMarks[tId] = (teamTaskMarks[tId] || 0) + Number(task.marks || 0);
+            const earned = task.obtained_marks !== null && task.obtained_marks !== undefined
+              ? Number(task.obtained_marks)
+              : Number(task.marks || 0);
+            teamTaskMarks[tId] = (teamTaskMarks[tId] || 0) + earned;
           }
         });
       }

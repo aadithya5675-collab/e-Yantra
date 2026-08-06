@@ -34,6 +34,7 @@ export interface Task {
   theme_id: number | null;
   alarm_acknowledged: boolean;
   marks?: number | null;
+  obtained_marks?: number | null;
   created_by: string;
   created_at: string;
   updated_at: string;
