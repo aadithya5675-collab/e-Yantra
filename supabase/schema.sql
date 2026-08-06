@@ -37,9 +37,13 @@ CREATE TABLE IF NOT EXISTS public.teams (
 
 -- Enable RLS (Row Level Security) but allow all operations for this demo
 ALTER TABLE public.themes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to themes" ON public.themes;
 CREATE POLICY "Allow public read access to themes" ON public.themes FOR SELECT USING (true);
 
 ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read access to teams" ON public.teams;
 CREATE POLICY "Allow public read access to teams" ON public.teams FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Allow authenticated insert to teams" ON public.teams;
 CREATE POLICY "Allow authenticated insert to teams" ON public.teams FOR INSERT TO authenticated WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow authenticated update to teams" ON public.teams;
 CREATE POLICY "Allow authenticated update to teams" ON public.teams FOR UPDATE TO authenticated USING (true);
