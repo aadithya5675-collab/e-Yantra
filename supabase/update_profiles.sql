@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
     status TEXT DEFAULT 'pending',
     due_date DATE,
     due_time TIME,
+    marks INTEGER DEFAULT 0 NOT NULL CHECK (marks >= 0),
     created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
