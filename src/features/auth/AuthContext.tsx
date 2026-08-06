@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user: session?.user ?? null,
         profile,
-        isAdmin: session?.user?.email === 'uvira@uvira-apex.team',
+        isAdmin: session?.user?.email === 'uvira@eyantra.com',
         isLeader: !!profile?.is_leader,
         teamId: profile?.team_id ?? null,
         themeId: (profile as any)?.teams?.theme_id ?? null,

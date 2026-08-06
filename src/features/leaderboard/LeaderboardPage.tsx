@@ -40,20 +40,48 @@ export function LeaderboardPage() {
     queryFn: async () => {
       let query = supabase
         .from('teams')
-        .select('id, name, official_eyantra_id, status, created_by, theme:themes!inner(id, name, slug)');
+        .select(`
+          id, 
+          name, 
+          official_eyantra_id, 
+          status, 
+          created_by, 
+          theme:themes!inner(id, name, slug),
+          profiles:profiles(display_name, is_leader)
+        `);
       if (activeThemeId) query = query.eq('theme_id', activeThemeId);
       const { data, error } = await query;
       if (error) throw error;
-      return (data || []).map((t: any) => ({
-        team_id: t.id,
-        team_name: t.name,
-        arc_code: t.official_eyantra_id || 'N/A',
-        leader_name: t.created_by ? 'Team Leader' : 'N/A',
-        official_score: 0,
-        arc_points: 0,
-        completed_tasks: 0,
-        theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
-      }));
+      
+      // Fetch real completed task counts per team by checking member assignments
+      // or directly by theme if it's 1:1. Using assigned_to -> profile -> team_id is safer.
+      const { data: taskData } = await supabase
+        .from('tasks')
+        .select('assigned_to, status, profiles:profiles!inner(team_id)')
+        .eq('status', 'completed');
+        
+      const teamTaskCounts: Record<number, number> = {};
+      if (taskData) {
+        taskData.forEach((task: any) => {
+          const tId = task.profiles?.team_id;
+          if (tId) teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
+        });
+      }
+
+      return (data || []).map((t: any) => {
+        const leader = Array.isArray(t.profiles) ? t.profiles.find((p: any) => p.is_leader) : null;
+        
+        return {
+          team_id: t.id,
+          team_name: t.name,
+          arc_code: t.official_eyantra_id || 'N/A',
+          leader_name: leader?.display_name || 'N/A',
+          official_score: 0, // Genuinely missing from schema. Left as 0 per instructions.
+          arc_points: 0, // Genuinely missing from schema. Left as 0 per instructions.
+          completed_tasks: teamTaskCounts[t.id] || 0,
+          theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
+        };
+      });
     },
   });
 

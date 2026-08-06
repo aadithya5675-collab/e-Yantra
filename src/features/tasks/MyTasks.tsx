@@ -10,9 +10,34 @@ export function MyTasks() {
   const { themeId } = useAuth();
   const { data: tasks, isLoading } = useTasks({ theme_id: themeId || undefined });
 
-  const inProgress = tasks?.filter(t => t.status === 'in_progress') ?? [];
-  const pending = tasks?.filter(t => t.status === 'pending') ?? [];
-  const completed = tasks?.filter(t => t.status === 'completed') ?? [];
+  const getTaskCategory = (task: any) => {
+    if (task.status === 'completed') return 'past';
+    
+    const now = new Date().getTime();
+    const startStr = task.start_date || task.created_at;
+    const start = startStr ? new Date(startStr).getTime() : 0;
+    
+    let due = null;
+    if (task.due_date) {
+      const d = new Date(task.due_date);
+      if (task.due_time) {
+        const [h, m] = task.due_time.split(':').map(Number);
+        d.setHours(h, m, 59, 999);
+      } else {
+        d.setHours(23, 59, 59, 999);
+      }
+      due = d.getTime();
+    }
+    
+    if (due && now > due) return 'past';
+    if (now < start) return 'upcoming';
+    
+    return 'ongoing';
+  };
+
+  const inProgress = tasks?.filter(t => getTaskCategory(t) === 'ongoing') ?? [];
+  const pending = tasks?.filter(t => getTaskCategory(t) === 'upcoming') ?? [];
+  const completed = tasks?.filter(t => getTaskCategory(t) === 'past') ?? [];
 
   const open = inProgress.length + pending.length;
 
