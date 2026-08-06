@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('profiles')
       .select('*, teams(theme_id)')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     setProfile(data);
   };
 

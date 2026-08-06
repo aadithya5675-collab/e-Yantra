@@ -118,7 +118,16 @@ export function TaskCard({ task, onEdit, showAssignee = false }: Props) {
               {isAssignee ? (
                 <select
                   value={task.status}
-                  onChange={(e) => updateTask.mutate({ id: task.id, status: e.target.value as TaskStatus })}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as TaskStatus;
+                    const updates: any = { id: task.id, status: newStatus };
+                    if (newStatus === 'completed') {
+                      updates.completed_at = new Date().toISOString();
+                    } else {
+                      updates.completed_at = null;
+                    }
+                    updateTask.mutate(updates);
+                  }}
                   className={`chip ${statusStyles[task.status]} cursor-pointer hover:brightness-95 appearance-none pr-6 bg-no-repeat bg-[right_6px_center] outline-none`}
                   style={{
                     backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")`,

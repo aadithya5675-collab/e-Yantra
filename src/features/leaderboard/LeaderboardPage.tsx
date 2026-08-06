@@ -21,6 +21,7 @@ const FALLBACK_THEMES = [
 export function LeaderboardPage() {
   const { themeId, isAdmin } = useAuth();
   const [selectedTheme, setSelectedTheme] = useState<string>(themeId ? themeId.toString() : '1');
+  const [sortBy, setSortBy] = useState<'points' | 'time'>('points');
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Non-admins always see their own theme's leaderboard.
@@ -56,7 +57,7 @@ export function LeaderboardPage() {
       // Fetch completed tasks grouped by team using explicit relation to profiles
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
-        .select('id, assigned_to, status, marks, obtained_marks, assigned_profile:profiles!assigned_to(team_id)')
+        .select('id, assigned_to, status, marks, obtained_marks, completed_at, assigned_profile:profiles!assigned_to(team_id)')
         .eq('status', 'completed');
 
       if (taskError) {
@@ -65,6 +66,7 @@ export function LeaderboardPage() {
 
       const teamTaskCounts: Record<number, number> = {};
       const teamTaskMarks: Record<number, number> = {};
+      const teamLastCompleted: Record<number, number> = {};
       if (taskData) {
         taskData.forEach((task: any) => {
           const tId = task.assigned_profile?.team_id;
@@ -74,6 +76,11 @@ export function LeaderboardPage() {
               ? Number(task.obtained_marks)
               : Number(task.marks || 0);
             teamTaskMarks[tId] = (teamTaskMarks[tId] || 0) + earned;
+            
+            const taskTime = task.completed_at ? new Date(task.completed_at).getTime() : 0;
+            if (taskTime > (teamLastCompleted[tId] || 0)) {
+              teamLastCompleted[tId] = taskTime;
+            }
           }
         });
       }
@@ -97,6 +104,7 @@ export function LeaderboardPage() {
           leader_name: leaderName,
           official_score: totalScore,
           completed_tasks: Number(teamTaskCounts[t.id] || 0),
+          last_completed_at: teamLastCompleted[t.id] || 0,
           theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
         };
       });
@@ -122,26 +130,57 @@ export function LeaderboardPage() {
   const sorted = useMemo(
     () =>
       [...(data || [])].sort((a, b) => {
+        if (sortBy === 'time') {
+          // Sort by fastest time first (lowest max timestamp), but 0 means they haven't completed any task.
+          const timeA = a.last_completed_at || Infinity;
+          const timeB = b.last_completed_at || Infinity;
+          if (timeA !== timeB) return timeA - timeB;
+        }
+
+        // Default: Sort by official score (highest first)
         if (b.official_score !== a.official_score) {
           return b.official_score - a.official_score;
         }
+        // Tie-breaker: completed tasks (highest first)
         if (b.completed_tasks !== a.completed_tasks) {
           return b.completed_tasks - a.completed_tasks;
         }
+        // Tie-breaker: completion time (earliest first)
+        const timeA = a.last_completed_at || Infinity;
+        const timeB = b.last_completed_at || Infinity;
+        if (timeA !== timeB) {
+          return timeA - timeB;
+        }
         return a.team_name.localeCompare(b.team_name);
       }),
-    [data]
+    [data, sortBy]
   );
 
   const activeThemeName = themes.find(t => t.id === activeThemeId)?.name ?? 'Theme';
 
   return (
     <div ref={containerRef} className="space-y-6">
-      <div>
-        <h1 className="font-display text-[30px] tracking-tight text-text-primary">Leaderboard</h1>
-        <p className="text-[14px] text-text-secondary mt-1">
-          Verified official standings · <span className="text-text-primary">{activeThemeName}</span>
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[30px] tracking-tight text-text-primary">Leaderboard</h1>
+          <p className="text-[14px] text-text-secondary mt-1">
+            Verified official standings · <span className="text-text-primary">{activeThemeName}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 bg-surface border border-hairline p-1 rounded-lg">
+          <button 
+            onClick={() => setSortBy('points')}
+            className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${sortBy === 'points' ? 'bg-muted text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+          >
+            Sort by Points
+          </button>
+          <button 
+            onClick={() => setSortBy('time')}
+            className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${sortBy === 'time' ? 'bg-muted text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+          >
+            Sort by Time
+          </button>
+        </div>
       </div>
 
       {isAdmin && (
