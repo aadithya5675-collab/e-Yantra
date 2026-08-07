@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Trophy, Megaphone, ClipboardList, ListTodo, Settings as SettingsIcon,
+  Trophy, Megaphone, ListTodo, Settings as SettingsIcon,
   Users, LogOut, type LucideIcon,
 } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
@@ -16,16 +16,14 @@ export function AppShell() {
 
   const navItems: NavItem[] = isAdmin
     ? [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard, end: true },
         { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
         { name: 'Announcements', path: '/announcements', icon: Megaphone },
         { name: 'Manage Tasks', path: '/manage-tasks', icon: ListTodo },
         { name: 'Settings', path: '/settings', icon: SettingsIcon },
       ]
     : [
-        { name: 'My Team', path: '/my-team', icon: Users },
         { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
-        { name: 'My Tasks', path: '/my-tasks', icon: ClipboardList },
+        { name: 'My Team', path: '/my-team', icon: Users },
         { name: 'Announcements', path: '/announcements', icon: Megaphone },
         { name: 'Settings', path: '/settings', icon: SettingsIcon },
       ];

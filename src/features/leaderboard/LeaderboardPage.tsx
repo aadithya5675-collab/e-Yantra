@@ -1,12 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, ShieldCheck, Trophy } from 'lucide-react';
+import { ChevronDown, CheckCircle2, ShieldCheck, Trophy, Trash2, Edit2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
-import { gsap, useGSAP, DURATION, EASE } from '../../lib/motion';
 import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
+import { useDeleteTask, useUpdateTask } from '../tasks/api';
 import { Spinner } from '../../components/ui/Spinner';
-import { EmptyState, ErrorState } from '../../components/ui/primitives';
+import { EmptyState, ErrorState, Badge } from '../../components/ui/primitives';
+import { useToast } from '../../components/ui/Toast';
 
 const FALLBACK_THEMES = [
   { id: '1', name: 'Logic Quest' },
@@ -19,22 +20,24 @@ const FALLBACK_THEMES = [
 ];
 
 export function LeaderboardPage() {
-  const { themeId, isAdmin } = useAuth();
-  const [selectedTheme, setSelectedTheme] = useState<string>(themeId ? themeId.toString() : '1');
-  const [sortBy, setSortBy] = useState<'points' | 'time'>('points');
-  const containerRef = useRef<HTMLDivElement>(null);
+  const { profile, isAdmin } = useAuth();
+  const { toast } = useToast();
+  const deleteTask = useDeleteTask();
+  const updateTask = useUpdateTask();
 
-  // Non-admins always see their own theme's leaderboard.
-  const activeThemeId = isAdmin ? selectedTheme : themeId?.toString() || '1';
+  const [selectedTheme, setSelectedTheme] = useState<string>('all');
+  const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
 
-  const { data: rawThemes } = useThemes();
+  const { data: rawThemes = [] } = useThemes();
   const themes = useMemo(() => {
-    if (!rawThemes?.length) return FALLBACK_THEMES;
-    return rawThemes.map(t => ({ id: String(t.id), name: t.name }));
+    const list = rawThemes.length ? rawThemes.map(t => ({ id: String(t.id), name: t.name })) : FALLBACK_THEMES;
+    return [{ id: 'all', name: 'All Themes' }, ...list];
   }, [rawThemes]);
 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['leaderboard', activeThemeId],
+  const activeThemeId = selectedTheme;
+
+  const { data: teamsData = [], isLoading: loadingTeams, isError: errorTeams, refetch } = useQuery({
+    queryKey: ['leaderboard-teams', activeThemeId],
     queryFn: async () => {
       let query = supabase
         .from('teams')
@@ -45,246 +48,352 @@ export function LeaderboardPage() {
           status, 
           created_by,
           official_score,
-          theme:themes!inner(id, name, slug),
-          team_members:profiles!team_id(id, display_name, is_leader)
+          theme_id,
+          theme:themes(id, name, slug),
+          team_members:profiles!team_id(id, display_name, full_name, username, email, is_leader)
         `);
-      if (activeThemeId) query = query.eq('theme_id', activeThemeId);
-      const { data: teamsData, error: teamsError } = await query;
-      if (teamsError) {
-        throw new Error(`Leaderboard teams query failed: ${teamsError.message}`);
+      if (activeThemeId !== 'all') {
+        query = query.eq('theme_id', parseInt(activeThemeId, 10));
       }
-
-      // Fetch completed tasks grouped by team using explicit relation to profiles
-      const { data: taskData, error: taskError } = await supabase
-        .from('tasks')
-        .select('id, assigned_to, status, marks, obtained_marks, completed_at, assigned_profile:profiles!assigned_to(team_id)')
-        .eq('status', 'completed');
-
-      if (taskError) {
-        throw new Error(`Leaderboard completed tasks query failed: ${taskError.message}`);
-      }
-
-      const teamTaskCounts: Record<number, number> = {};
-      const teamTaskMarks: Record<number, number> = {};
-      const teamLastCompleted: Record<number, number> = {};
-      if (taskData) {
-        taskData.forEach((task: any) => {
-          const tId = task.assigned_profile?.team_id;
-          if (tId != null) {
-            teamTaskCounts[tId] = (teamTaskCounts[tId] || 0) + 1;
-            const earned = task.obtained_marks !== null && task.obtained_marks !== undefined
-              ? Number(task.obtained_marks)
-              : Number(task.marks || 0);
-            teamTaskMarks[tId] = (teamTaskMarks[tId] || 0) + earned;
-            
-            const taskTime = task.completed_at ? new Date(task.completed_at).getTime() : 0;
-            if (taskTime > (teamLastCompleted[tId] || 0)) {
-              teamLastCompleted[tId] = taskTime;
-            }
-          }
-        });
-      }
-
-      return (teamsData || []).map((t: any) => {
-        const members = Array.isArray(t.team_members) ? t.team_members : [];
-        const leaders = members.filter((p: any) => Boolean(p.is_leader));
-        if (leaders.length > 1) {
-          console.warn(`Team ${t.id} (${t.name}) has ${leaders.length} leaders assigned.`);
-        }
-        const leaderName = leaders[0]?.display_name || 'N/A';
-
-        const baseScore = Number(t.official_score ?? 0);
-        const taskMarks = Number(teamTaskMarks[t.id] || 0);
-        const totalScore = baseScore + taskMarks;
-
-        return {
-          team_id: Number(t.id),
-          team_name: String(t.name || ''),
-          arc_code: String(t.official_eyantra_id || 'N/A'),
-          leader_name: leaderName,
-          official_score: totalScore,
-          completed_tasks: Number(teamTaskCounts[t.id] || 0),
-          last_completed_at: teamLastCompleted[t.id] || 0,
-          theme: Array.isArray(t.theme) ? t.theme[0] : t.theme,
-        };
-      });
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
     },
   });
 
-  useGSAP(
-    () => {
-      if (isLoading || !containerRef.current) return;
-      const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.fromTo(
-          '.gs-row',
-          { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: DURATION.base, ease: EASE.out, stagger: 0.04, clearProps: 'all' }
-        );
-      });
-      return () => mm.revert();
+  const { data: tasksData = [], isLoading: loadingTasks } = useQuery({
+    queryKey: ['leaderboard-tasks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*, assigned_profile:profiles!assigned_to(team_id)');
+      if (error && error.code !== '42703') throw error;
+      return data || [];
     },
-    { scope: containerRef, dependencies: [data] }
-  );
+  });
 
-  const sorted = useMemo(
-    () =>
-      [...(data || [])].sort((a, b) => {
-        if (sortBy === 'time') {
-          // Sort by fastest time first (lowest max timestamp), but 0 means they haven't completed any task.
-          const timeA = a.last_completed_at || Infinity;
-          const timeB = b.last_completed_at || Infinity;
-          if (timeA !== timeB) return timeA - timeB;
-        }
+  const isLoading = loadingTeams || loadingTasks;
 
-        // Default: Sort by official score (highest first)
-        if (b.official_score !== a.official_score) {
-          return b.official_score - a.official_score;
-        }
-        // Tie-breaker: completed tasks (highest first)
-        if (b.completed_tasks !== a.completed_tasks) {
-          return b.completed_tasks - a.completed_tasks;
-        }
-        // Tie-breaker: completion time (earliest first)
-        const timeA = a.last_completed_at || Infinity;
-        const timeB = b.last_completed_at || Infinity;
-        if (timeA !== timeB) {
-          return timeA - timeB;
-        }
-        return a.team_name.localeCompare(b.team_name);
-      }),
-    [data, sortBy]
-  );
+  // Process leaderboard standings per team
+  const standings = useMemo(() => {
+    return teamsData.map((team: any) => {
+      const members = Array.isArray(team.team_members) ? team.team_members : [];
+      const leader = members.find((m: any) => Boolean(m.is_leader));
 
-  const activeThemeName = themes.find(t => t.id === activeThemeId)?.name ?? 'Theme';
+      // Get all tasks assigned to members of this team
+      const teamTasks = tasksData.filter((t: any) => {
+        return t.assigned_profile?.team_id === team.id || members.some((m: any) => m.id === t.assigned_to);
+      });
+
+      // Deduplicate tasks by title/id for team score calculation
+      const uniqueTasksMap = new Map<string, any>();
+      teamTasks.forEach((t: any) => {
+        if (!uniqueTasksMap.has(t.title) || t.status === 'completed') {
+          uniqueTasksMap.set(t.title, t);
+        }
+      });
+
+      const uniqueTasks = Array.from(uniqueTasksMap.values());
+
+      let totalScore = 0;
+      uniqueTasks.forEach((t: any) => {
+        if (t.obtained_marks !== null && t.obtained_marks !== undefined) {
+          totalScore += Number(t.obtained_marks);
+        }
+      });
+
+      const themeObj = Array.isArray(team.theme) ? team.theme[0] : team.theme;
+
+      return {
+        team_id: Number(team.id),
+        team_name: String(team.name || ''),
+        arc_code: String(team.official_eyantra_id || 'N/A'),
+        leader_name: leader?.display_name || leader?.full_name || 'N/A',
+        total_score: totalScore,
+        theme_name: themeObj?.name || 'Unassigned',
+        tasks: uniqueTasks,
+        members,
+        raw_team: team,
+      };
+    }).sort((a, b) => {
+      if (b.total_score !== a.total_score) return b.total_score - a.total_score;
+      return a.team_name.localeCompare(b.team_name);
+    });
+  }, [teamsData, tasksData]);
+
+  const handleDeleteTask = (taskId: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete task "${title}"?`)) {
+      deleteTask.mutate(taskId);
+      toast(`Task "${title}" deleted`, 'success');
+    }
+  };
+
+  const handleUpdateMarks = (taskId: string, newMarks: string) => {
+    const val = newMarks === '' ? null : Number(newMarks);
+    updateTask.mutate({ id: taskId, obtained_marks: val });
+  };
+
+  const handleToggleStatus = (task: any) => {
+    const nextStatus = task.status === 'completed' ? 'pending' : 'completed';
+    updateTask.mutate({ id: task.id, status: nextStatus });
+    toast(`Task status set to ${nextStatus === 'completed' ? 'Done' : 'Not Done'}`, 'success');
+  };
 
   return (
-    <div ref={containerRef} className="space-y-6">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-[30px] tracking-tight text-text-primary">Leaderboard</h1>
           <p className="text-[14px] text-text-secondary mt-1">
-            Verified official standings · <span className="text-text-primary">{activeThemeName}</span>
+            Official team standings & task achievements.
           </p>
-        </div>
-        <div className="flex items-center gap-2 bg-surface border border-hairline p-1 rounded-lg">
-          <button 
-            onClick={() => setSortBy('points')}
-            className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${sortBy === 'points' ? 'bg-muted text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
-          >
-            Sort by Points
-          </button>
-          <button 
-            onClick={() => setSortBy('time')}
-            className={`px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors ${sortBy === 'time' ? 'bg-muted text-text-primary' : 'text-text-secondary hover:text-text-primary'}`}
-          >
-            Sort by Time
-          </button>
         </div>
       </div>
 
-      {isAdmin && (
-        <div>
-          <label htmlFor="lb-theme" className="sr-only">Select theme</label>
-          {/* Chips on wider screens, native select on mobile — both accessible. */}
-          <div
-            role="tablist"
-            aria-label="Leaderboard theme"
-            className="hidden sm:flex flex-wrap gap-2"
-          >
-            {themes.map(t => (
-              <button
-                key={t.id}
-                role="tab"
-                aria-selected={t.id === activeThemeId}
-                data-active={t.id === activeThemeId}
-                onClick={() => setSelectedTheme(t.id)}
-                className="chip"
-              >
-                {t.name}
-              </button>
-            ))}
-          </div>
-          <select
-            id="lb-theme"
-            className="arc-input sm:hidden"
-            value={activeThemeId}
-            onChange={e => setSelectedTheme(e.target.value)}
-          >
-            {themes.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+      {/* Theme Tabs Filter */}
+      <div>
+        <div role="tablist" aria-label="Leaderboard theme" className="hidden sm:flex flex-wrap gap-2">
+          {themes.map(t => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={t.id === activeThemeId}
+              onClick={() => setSelectedTheme(t.id)}
+              className={`chip ${t.id === activeThemeId ? 'chip-active' : ''}`}
+              style={t.id === activeThemeId ? { background: 'var(--c-accent-color)', color: '#04121a' } : undefined}
+            >
+              {t.name}
+            </button>
+          ))}
         </div>
-      )}
 
+        <select
+          id="lb-theme"
+          className="arc-input sm:hidden"
+          value={activeThemeId}
+          onChange={e => setSelectedTheme(e.target.value)}
+        >
+          {themes.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Main Leaderboard Table */}
       {isLoading ? (
         <div className="py-20 flex justify-center"><Spinner size={32} /></div>
-      ) : isError ? (
+      ) : errorTeams ? (
         <ErrorState description="Unable to load leaderboard data." onRetry={() => refetch()} />
-      ) : sorted.length === 0 ? (
+      ) : standings.length === 0 ? (
         <EmptyState
           icon={<ShieldCheck size={30} />}
-          title="No verified standings yet"
-          description="Scores appear here once tasks and score windows are verified by administrators."
+          title="No teams found"
+          description="Teams will appear here once they complete registration and theme assignment."
         />
       ) : (
-        <>
-          {/* Desktop table */}
-          <div className="surface-card overflow-hidden hidden sm:block p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-hairline bg-muted/60 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
-                    <th scope="col" className="py-3 px-4 text-center w-16">Rank</th>
-                    <th scope="col" className="py-3 px-4">Team</th>
-                    <th scope="col" className="py-3 px-4">Theme</th>
-                    <th scope="col" className="py-3 px-4">Leader</th>
-                    <th scope="col" className="py-3 px-4 text-center">Verified tasks</th>
-                    <th scope="col" className="py-3 px-4 text-right">Official score</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {sorted.map((t, idx) => (
-                    <tr key={t.team_id} className="gs-row border-b border-hairline last:border-0 hover:bg-muted/40 transition-colors">
-                      <td className="py-3.5 px-4 text-center"><RankMedal rank={idx + 1} /></td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-medium text-text-primary">{t.team_name}</div>
-                        <div className="text-[11px] text-accent-color tabular">{t.arc_code}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.theme?.name || '—'}</td>
-                      <td className="py-3.5 px-4 text-text-secondary text-[13px]">{t.leader_name || '—'}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="badge badge-success"><CheckCircle2 size={13} />{t.completed_tasks}</span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-semibold text-text-primary tabular">
-                        {t.official_score.toFixed(1)} <span className="text-text-muted text-xs">pts</span>
+        <div className="surface-card overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-hairline bg-muted/60 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+                  <th scope="col" className="py-3 px-4 text-center w-14">Rank</th>
+                  <th scope="col" className="py-3 px-4">Team / Code</th>
+                  {activeThemeId === 'all' && <th scope="col" className="py-3 px-4">Theme</th>}
+                  <th scope="col" className="py-3 px-4">Scores</th>
+                  <th scope="col" className="py-3 px-4 text-right">Total Score</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm divide-y divide-hairline">
+                {standings.map((team, idx) => {
+                  const isExpanded = expandedTeamId === team.team_id;
+                  const isMyTeam = profile?.team_id === team.team_id;
+                  const isLeaderOfTeam = isMyTeam && Boolean(profile?.is_leader);
+                  const canEditScores = isAdmin || isLeaderOfTeam;
+
+                  return (
+                    <tr key={team.team_id} className="group">
+                      <td colSpan={activeThemeId === 'all' ? 5 : 4} className="p-0">
+                        {/* Main Team Row */}
+                        <div
+                          onClick={() => setExpandedTeamId(isExpanded ? null : team.team_id)}
+                          className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/40 transition-colors select-none"
+                        >
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
+                            <div className="w-10 text-center shrink-0">
+                              <RankMedal rank={idx + 1} />
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-text-primary text-[15px] truncate">
+                                  {team.team_name}
+                                </span>
+                                <ChevronDown
+                                  size={16}
+                                  className={`text-text-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                />
+                              </div>
+                              <span className="text-xs text-accent-color font-mono">{team.arc_code}</span>
+                            </div>
+
+                            {activeThemeId === 'all' && (
+                              <div className="hidden md:block w-36 text-xs text-text-secondary truncate">
+                                {team.theme_name}
+                              </div>
+                            )}
+
+                            {/* Task Score Chips */}
+                            <div className="flex-1 hidden sm:flex flex-wrap items-center gap-2 px-2">
+                              {team.tasks.length === 0 ? (
+                                <span className="text-xs text-text-muted italic">No tasks assigned</span>
+                              ) : (
+                                team.tasks.map((task: any) => (
+                                  <div
+                                    key={task.id}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted border border-hairline"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <span className="text-text-primary">{task.title}:</span>
+                                    <span className="text-accent-color font-semibold">
+                                      {task.obtained_marks !== null && task.obtained_marks !== undefined
+                                        ? `${task.obtained_marks}/${task.marks}`
+                                        : `-/${task.marks}`} pts
+                                    </span>
+
+                                    {isAdmin && (
+                                      <button
+                                        onClick={e => handleDeleteTask(task.id, task.title, e)}
+                                        className="ml-1 p-0.5 text-text-muted hover:text-danger-color rounded transition-colors"
+                                        title="Delete Task"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Total Score */}
+                            <div className="text-right shrink-0 w-28">
+                              <span className="font-bold text-base text-text-primary font-mono">
+                                {team.total_score}
+                              </span>
+                              <span className="text-xs text-text-muted ml-1">pts</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Expandable Accordion Dropdown for Team Members & Tasks */}
+                        {isExpanded && (
+                          <div className="p-5 bg-muted/20 border-t border-hairline space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                                Team Roster & Tasks ({team.members.length} Members)
+                              </h3>
+                              {isMyTeam && (
+                                <span className="text-xs text-accent-color font-medium">Your Team</span>
+                              )}
+                            </div>
+
+                            {/* Members Table inside Dropdown */}
+                            <div className="space-y-3">
+                              {team.members.map((member: any) => {
+                                const memberTasks = tasksData.filter((t: any) => t.assigned_to === member.id);
+
+                                return (
+                                  <div
+                                    key={member.id}
+                                    className="p-3.5 rounded-lg border border-hairline bg-surface space-y-2"
+                                  >
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                      <div>
+                                        <p className="text-sm font-medium text-text-primary">
+                                          {member.display_name || member.full_name || member.username}
+                                          {member.is_leader && (
+                                            <span className="ml-2 text-xs font-normal text-accent-color">
+                                              (Team Leader)
+                                            </span>
+                                          )}
+                                        </p>
+                                        <p className="text-xs text-text-muted">{member.email}</p>
+                                      </div>
+                                    </div>
+
+                                    {/* Member Tasks */}
+                                    <div className="pt-2 border-t border-hairline/60 space-y-2">
+                                      {memberTasks.length === 0 ? (
+                                        <p className="text-xs text-text-muted italic">No tasks assigned to member.</p>
+                                      ) : (
+                                        memberTasks.map((task: any) => (
+                                          <div
+                                            key={task.id}
+                                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded bg-muted/30 border border-hairline"
+                                          >
+                                            <div className="min-w-0">
+                                              <p className="text-xs font-medium text-text-primary">{task.title}</p>
+                                              {task.due_date && (
+                                                <p className="text-[11px] text-text-muted">Due: {task.due_date}</p>
+                                              )}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 flex-wrap">
+                                              {/* Status Toggle for Team Members / Admin */}
+                                              {(isMyTeam || isAdmin) ? (
+                                                <button
+                                                  onClick={() => handleToggleStatus(task)}
+                                                  className={`chip text-xs px-2.5 py-1 ${
+                                                    task.status === 'completed'
+                                                      ? 'bg-success-color/15 text-success-color font-semibold'
+                                                      : 'bg-warning-color/15 text-warning-color'
+                                                  }`}
+                                                >
+                                                  {task.status === 'completed' ? '✓ Done' : '○ Pending'}
+                                                </button>
+                                              ) : (
+                                                <Badge tone={task.status === 'completed' ? 'success' : 'warning'}>
+                                                  {task.status === 'completed' ? 'Done' : 'Pending'}
+                                                </Badge>
+                                              )}
+
+                                              {/* Points Gained Input (Leader / Admin Only) */}
+                                              {canEditScores && task.marks > 0 && (
+                                                <div className="flex items-center gap-1.5 bg-surface border border-hairline rounded px-2 py-1">
+                                                  <label htmlFor={`score-${task.id}`} className="text-xs text-text-muted font-medium">Marks:</label>
+                                                  <input
+                                                    id={`score-${task.id}`}
+                                                    type="number"
+                                                    min="0"
+                                                    max={task.marks}
+                                                    defaultValue={task.obtained_marks ?? ''}
+                                                    onBlur={e => handleUpdateMarks(task.id, e.target.value)}
+                                                    className="w-12 text-xs p-0.5 text-center bg-muted border border-hairline rounded text-text-primary"
+                                                    placeholder={`${task.marks}`}
+                                                  />
+                                                  <span className="text-xs text-text-muted">/ {task.marks}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-
-          {/* Mobile cards */}
-          <div className="sm:hidden space-y-2.5">
-            {sorted.map((t, idx) => (
-              <div key={t.team_id} className="gs-row surface-card p-4 flex items-center gap-3">
-                <RankMedal rank={idx + 1} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-text-primary truncate">{t.team_name}</p>
-                  <p className="text-[12px] text-text-secondary truncate">
-                    {t.theme?.name || '—'} · <span className="tabular text-accent-color">{t.arc_code}</span>
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-semibold text-text-primary tabular">{t.official_score.toFixed(1)} <span className="text-[11px] font-normal text-text-muted">pts</span></p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -308,3 +417,4 @@ function RankMedal({ rank }: { rank: number }) {
     </span>
   );
 }
+

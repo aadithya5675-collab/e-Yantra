@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/ui/primitives';
 import { useToast } from '../../components/ui/Toast';
 import { useTheme } from '../../lib/theme';
 import { Reveal } from '../../components/motion/Reveal';
-import { LogOut, Moon, Sun, Key, Bell, BellOff, Users, UserPlus, UserMinus, Palette, Save } from 'lucide-react';
+import { LogOut, Moon, Sun, Key, Users, UserPlus, UserMinus, Palette, Save } from 'lucide-react';
 
 export function Settings() {
   const { profile, signOut } = useAuth();
@@ -19,24 +19,6 @@ export function Settings() {
   const [error, setError] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(profile?.notifications_enabled ?? true);
-
-  useEffect(() => {
-    if (profile) setNotificationsEnabled(profile.notifications_enabled ?? true);
-  }, [profile]);
-
-  const toggleNotifications = async () => {
-    if (!profile) return;
-    const newVal = !notificationsEnabled;
-    setNotificationsEnabled(newVal);
-    const { error: err } = await supabase.from('profiles').update({ notifications_enabled: newVal }).eq('id', profile.id);
-    if (err) {
-      setNotificationsEnabled(!newVal);
-      toast('Could not update notification preferences', 'error');
-    } else {
-      toast(newVal ? 'Notifications enabled' : 'Notifications muted', 'success');
-    }
-  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,20 +62,6 @@ export function Settings() {
               <Button variant="secondary" size="sm" onClick={toggleTheme}>
                 {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
                 {theme === 'dark' ? 'Light' : 'Dark'}
-              </Button>
-            }
-          />
-        </Section>
-
-        {/* Notifications */}
-        <Section title="Notifications" icon={<Bell size={16} />}>
-          <Row
-            title="Task alarms & reminders"
-            detail={notificationsEnabled ? 'Enabled' : 'Disabled'}
-            action={
-              <Button variant="secondary" size="sm" onClick={toggleNotifications}>
-                {notificationsEnabled ? <Bell size={15} /> : <BellOff size={15} />}
-                {notificationsEnabled ? 'On' : 'Off'}
               </Button>
             }
           />

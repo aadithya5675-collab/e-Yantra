@@ -8,11 +8,9 @@ import { AppShell } from './app/AppShell';
 import { FullPageSpinner } from './components/ui/Spinner';
 
 // Route-level code splitting keeps the first paint light.
-const Dashboard = lazy(() => import('./features/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
 const LeaderboardPage = lazy(() => import('./features/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
 const AnnouncementsPage = lazy(() => import('./features/announcements/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage })));
 const MyTeam = lazy(() => import('./features/team/MyTeam').then(m => ({ default: m.MyTeam })));
-const MyTasks = lazy(() => import('./features/tasks/MyTasks').then(m => ({ default: m.MyTasks })));
 const ManageTasks = lazy(() => import('./features/tasks/ManageTasks').then(m => ({ default: m.ManageTasks })));
 const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
 // e-Yantra — single-theme team onboarding wizard.
@@ -59,9 +57,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function IndexRoute() {
-  const { isAdmin } = useAuth();
-  if (isAdmin) return <Dashboard />;
-  return <Navigate to="/my-team" replace />;
+  return <Navigate to="/leaderboard" replace />;
 }
 
 function App() {
@@ -89,7 +85,6 @@ function App() {
                 <Route path="leaderboard" element={<LeaderboardPage />} />
                 <Route path="announcements" element={<AnnouncementsPage />} />
                 <Route path="my-team" element={<MemberRoute><MyTeam /></MemberRoute>} />
-                <Route path="my-tasks" element={<MemberRoute><MyTasks /></MemberRoute>} />
                 <Route path="manage-tasks" element={<AdminRoute><ManageTasks /></AdminRoute>} />
                 <Route path="settings" element={<Settings />} />
               </Route>
