@@ -32,7 +32,8 @@ export function useUpdateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['admin-tasks'] });
-      qc.invalidateQueries({ queryKey: ['leaderboard'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-tasks'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-teams'] });
     },
   });
 }
@@ -40,14 +41,21 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('tasks').delete().eq('id', id);
+    mutationFn: async (params: string | { title: string; assignedToIds: string[] }) => {
+      let query = supabase.from('tasks').delete();
+      if (typeof params === 'string') {
+        query = query.eq('id', params);
+      } else {
+        query = query.eq('title', params.title).in('assigned_to', params.assignedToIds);
+      }
+      const { error } = await query;
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['admin-tasks'] });
-      qc.invalidateQueries({ queryKey: ['leaderboard'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-tasks'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-teams'] });
     },
   });
 }

@@ -32,7 +32,6 @@ export function ManageTasks() {
 
   const [title, setTitle] = useState('');
   const [themeId, setThemeId] = useState('');
-  const [evalMode, setEvalMode] = useState('points');
   const [marks, setMarks] = useState('10');
   const [dueDate, setDueDate] = useState('');
 
@@ -133,22 +132,7 @@ export function ManageTasks() {
               </div>
 
               <div className="field">
-                <label htmlFor="mt-eval" className="field-label font-medium text-text-primary mb-1 block">Evaluation Type</label>
-                <select
-                  id="mt-eval"
-                  value={evalMode}
-                  onChange={e => setEvalMode(e.target.value)}
-                  className="arc-input"
-                >
-                  <option value="points">Points-based</option>
-                  <option value="time">Time-based</option>
-                </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="mt-marks" className="field-label font-medium text-text-primary mb-1 block">
-                  {evalMode === 'points' ? 'Total Marks' : 'Target Time (minutes)'}
-                </label>
+                <label htmlFor="mt-marks" className="field-label font-medium text-text-primary mb-1 block">Total Marks</label>
                 <input
                   id="mt-marks"
                   type="number"
@@ -157,7 +141,7 @@ export function ManageTasks() {
                   value={marks}
                   onChange={e => setMarks(e.target.value)}
                   className="arc-input"
-                  placeholder={evalMode === 'points' ? 'e.g. 10' : 'e.g. 120'}
+                  placeholder="e.g. 10"
                 />
               </div>
 

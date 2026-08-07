@@ -120,10 +120,11 @@ export function LeaderboardPage() {
     });
   }, [teamsData, tasksData]);
 
-  const handleDeleteTask = (taskId: string, title: string, e: React.MouseEvent) => {
+  const handleDeleteTask = (team: any, title: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(`Are you sure you want to delete task "${title}"?`)) {
-      deleteTask.mutate(taskId);
+      const assignedToIds = team.members.map((m: any) => m.id);
+      deleteTask.mutate({ title, assignedToIds });
       toast(`Task "${title}" deleted`, 'success');
     }
   };
@@ -258,7 +259,7 @@ export function LeaderboardPage() {
 
                                     {isAdmin && (
                                       <button
-                                        onClick={e => handleDeleteTask(task.id, task.title, e)}
+                                        onClick={e => handleDeleteTask(team, task.title, e)}
                                         className="ml-1 p-0.5 text-text-muted hover:text-danger-color rounded transition-colors"
                                         title="Delete Task"
                                       >
@@ -334,8 +335,8 @@ export function LeaderboardPage() {
                                             </div>
 
                                             <div className="flex items-center gap-3 flex-wrap">
-                                              {/* Status Toggle for Team Members / Admin */}
-                                              {(isMyTeam || isAdmin) ? (
+                                              {/* Status Toggle for Assigned Member */}
+                                              {task.assigned_to === profile?.id ? (
                                                 <button
                                                   onClick={() => handleToggleStatus(task)}
                                                   className={`chip text-xs px-2.5 py-1 ${
