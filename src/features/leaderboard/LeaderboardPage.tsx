@@ -49,7 +49,7 @@ export function LeaderboardPage() {
           created_by,
           theme_id,
           theme:themes(id, name, slug),
-          team_members:profiles!team_id(id, display_name, full_name, username, email, is_leader)
+          team_members:profiles!team_id(id, display_name, username, is_leader)
         `);
       if (activeThemeId !== 'all') {
         query = query.eq('theme_id', parseInt(activeThemeId, 10));
@@ -107,7 +107,7 @@ export function LeaderboardPage() {
         team_id: Number(team.id),
         team_name: String(team.name || ''),
         arc_code: String(team.official_eyantra_id || 'N/A'),
-        leader_name: leader?.display_name || leader?.full_name || 'N/A',
+        leader_name: leader?.display_name || leader?.username || 'N/A',
         total_score: totalScore,
         theme_name: themeObj?.name || 'Unassigned',
         tasks: uniqueTasks,
@@ -305,14 +305,14 @@ export function LeaderboardPage() {
                                     <div className="flex items-center justify-between flex-wrap gap-2">
                                       <div>
                                         <p className="text-sm font-medium text-text-primary">
-                                          {member.display_name || member.full_name || member.username}
+                                          {member.display_name || member.username}
                                           {member.is_leader && (
                                             <span className="ml-2 text-xs font-normal text-accent-color">
                                               (Team Leader)
                                             </span>
                                           )}
                                         </p>
-                                        <p className="text-xs text-text-muted">{member.email}</p>
+
                                       </div>
                                     </div>
 
