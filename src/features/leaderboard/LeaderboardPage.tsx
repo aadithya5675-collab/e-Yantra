@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, CheckCircle2, ShieldCheck, Trophy, Trash2, Edit2 } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Trophy, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
