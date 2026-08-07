@@ -38,6 +38,25 @@ export function useUpdateTask() {
   });
 }
 
+export function useUpdateTeamTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ title, assignedToIds, updates }: { title: string; assignedToIds: string[]; updates: Partial<Task> }) => {
+      const { error } = await supabase.from('tasks')
+        .update(updates)
+        .eq('title', title)
+        .in('assigned_to', assignedToIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+      qc.invalidateQueries({ queryKey: ['admin-tasks'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-tasks'] });
+      qc.invalidateQueries({ queryKey: ['leaderboard-teams'] });
+    },
+  });
+}
+
 export function useDeleteTask() {
   const qc = useQueryClient();
   return useMutation({

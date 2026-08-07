@@ -4,7 +4,7 @@ import { ChevronDown, ShieldCheck, Trophy, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
-import { useDeleteTask, useUpdateTask } from '../tasks/api';
+import { useDeleteTask, useUpdateTask, useUpdateTeamTask } from '../tasks/api';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState, ErrorState, Badge } from '../../components/ui/primitives';
 import { useToast } from '../../components/ui/Toast';
@@ -24,6 +24,7 @@ export function LeaderboardPage() {
   const { toast } = useToast();
   const deleteTask = useDeleteTask();
   const updateTask = useUpdateTask();
+  const updateTeamTask = useUpdateTeamTask();
 
   const [selectedTheme, setSelectedTheme] = useState<string>('all');
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
@@ -129,7 +130,17 @@ export function LeaderboardPage() {
     }
   };
 
-
+  const handleUpdateTeamMarks = (team: any, task: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentMarks = task.obtained_marks != null ? String(task.obtained_marks) : '';
+    const newVal = window.prompt(`Enter new marks for "${task.title}" (Max: ${task.marks}):`, currentMarks);
+    if (newVal !== null) {
+      const val = newVal.trim() === '' ? null : Number(newVal);
+      const assignedToIds = team.members.map((m: any) => m.id);
+      updateTeamTask.mutate({ title: task.title, assignedToIds, updates: { obtained_marks: val } });
+      toast(`Marks updated for "${task.title}"`, 'success');
+    }
+  };
 
   const handleToggleStatus = (task: any) => {
     const nextStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -206,6 +217,8 @@ export function LeaderboardPage() {
                 {standings.map((team, idx) => {
                   const isExpanded = expandedTeamId === team.team_id;
                   const isMyTeam = profile?.team_id === team.team_id;
+                  const isLeaderOfTeam = isMyTeam && Boolean(profile?.is_leader);
+                  const canEditScores = isAdmin || isLeaderOfTeam;
 
                   return (
                     <tr key={team.team_id} className="group">
@@ -247,8 +260,13 @@ export function LeaderboardPage() {
                                 team.tasks.map((task: any) => (
                                   <div
                                     key={task.id}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted border border-hairline"
-                                    onClick={e => e.stopPropagation()}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted border border-hairline ${canEditScores ? 'cursor-pointer hover:bg-muted/80' : ''}`}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      if (canEditScores) {
+                                        handleUpdateTeamMarks(team, task, e);
+                                      }
+                                    }}
                                   >
                                     <span className="text-text-primary">{task.title}</span>
                                     {task.obtained_marks != null && (
