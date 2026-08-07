@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ShieldCheck, Trophy, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
@@ -144,6 +144,8 @@ export function LeaderboardPage() {
     setModalMarksValue(task.obtained_marks != null ? String(task.obtained_marks) : '');
     setIsMarksModalOpen(true);
   };
+
+  const closeMarksModal = useCallback(() => setIsMarksModalOpen(false), []);
 
   const submitMarksUpdate = () => {
     if (!marksModalTask || !marksModalTeam) return;
@@ -407,12 +409,12 @@ export function LeaderboardPage() {
       {/* Marks Update Modal */}
       <Modal
         open={isMarksModalOpen}
-        onClose={() => setIsMarksModalOpen(false)}
+        onClose={closeMarksModal}
         title={`Enter marks for "${marksModalTask?.title}"`}
         description={`Maximum marks: ${marksModalTask?.marks}`}
         footer={
           <div className="flex justify-end gap-3 w-full">
-            <Button variant="ghost" onClick={() => setIsMarksModalOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={closeMarksModal}>Cancel</Button>
             <Button onClick={submitMarksUpdate}>Save Marks</Button>
           </div>
         }
@@ -424,7 +426,15 @@ export function LeaderboardPage() {
             max={marksModalTask?.marks}
             className="arc-input"
             value={modalMarksValue}
-            onChange={e => setModalMarksValue(e.target.value)}
+            onChange={e => {
+              const max = marksModalTask?.marks;
+              const val = e.target.value;
+              if (val !== '' && max !== undefined && Number(val) > max) {
+                setModalMarksValue(String(max));
+              } else {
+                setModalMarksValue(val);
+              }
+            }}
             placeholder={`e.g. ${marksModalTask?.marks}`}
             autoFocus
             onKeyDown={e => { if (e.key === 'Enter') submitMarksUpdate(); }}
