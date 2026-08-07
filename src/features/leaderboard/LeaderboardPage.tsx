@@ -272,7 +272,7 @@ export function LeaderboardPage() {
                                 <span className="text-xs text-text-muted italic">No tasks assigned</span>
                               ) : (
                                 team.tasks.map((task: any) => {
-                                  const isDone = task.status === 'completed';
+                                  const isDone = task.status === 'completed' || (task.obtained_marks != null && task.obtained_marks > 0);
                                   const colorClasses = isDone 
                                     ? 'bg-success-color/15 text-success-color border-success-color/20' 
                                     : 'bg-danger-color/15 text-danger-color border-danger-color/20';
@@ -340,56 +340,51 @@ export function LeaderboardPage() {
                                 return (
                                   <div
                                     key={member.id}
-                                    className="p-3.5 rounded-lg border border-hairline bg-surface space-y-2"
+                                    className="p-3 rounded-lg border border-hairline bg-surface flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
                                   >
-                                    <div className="flex items-center justify-between flex-wrap gap-2">
-                                      <div>
-                                        <p className="text-sm font-medium text-text-primary">
-                                          {member.display_name || member.username}
-                                          {member.is_leader && (
-                                            <span className="ml-2 text-xs font-normal text-accent-color">
-                                              (Team Leader)
-                                            </span>
-                                          )}
-                                        </p>
-
-                                      </div>
+                                    <div className="min-w-[140px] shrink-0">
+                                      <p className="text-sm font-medium text-text-primary truncate">
+                                        {member.display_name || member.username}
+                                        {member.is_leader && (
+                                          <span className="ml-1.5 text-[11px] font-normal text-accent-color">
+                                            (Leader)
+                                          </span>
+                                        )}
+                                      </p>
                                     </div>
 
                                     {/* Member Tasks */}
-                                    <div className="pt-2 border-t border-hairline/60 space-y-2">
+                                    <div className="flex-1 flex flex-wrap gap-2">
                                       {memberTasks.length === 0 ? (
-                                        <p className="text-xs text-text-muted italic">No tasks assigned to member.</p>
+                                        <p className="text-[11px] text-text-muted italic">No tasks assigned.</p>
                                       ) : (
-                                        <div className="flex flex-wrap gap-2">
-                                          {memberTasks.map((task: any) => {
-                                            const isDone = task.status === 'completed';
-                                            const colorClasses = isDone 
-                                              ? 'bg-success-color/15 text-success-color border-success-color/20' 
-                                              : 'bg-danger-color/15 text-danger-color border-danger-color/20';
-                                            
-                                            if (task.assigned_to === profile?.id) {
-                                              return (
-                                                <button
-                                                  key={task.id}
-                                                  onClick={() => handleToggleStatus(task)}
-                                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border hover:opacity-80 transition-opacity ${colorClasses}`}
-                                                >
-                                                  {task.title} ({isDone ? 'Done' : 'Pending'})
-                                                </button>
-                                              );
-                                            }
-
+                                        memberTasks.map((task: any) => {
+                                          const isDone = task.status === 'completed' || (task.obtained_marks != null && task.obtained_marks > 0);
+                                          const colorClasses = isDone 
+                                            ? 'bg-success-color/15 text-success-color border-success-color/20' 
+                                            : 'bg-danger-color/15 text-danger-color border-danger-color/20';
+                                          
+                                          if (task.assigned_to === profile?.id) {
                                             return (
-                                              <span
+                                              <button
                                                 key={task.id}
-                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${colorClasses}`}
+                                                onClick={() => handleToggleStatus(task)}
+                                                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border hover:opacity-80 transition-opacity ${colorClasses}`}
                                               >
                                                 {task.title} ({isDone ? 'Done' : 'Pending'})
-                                              </span>
+                                              </button>
                                             );
-                                          })}
-                                        </div>
+                                          }
+
+                                          return (
+                                            <span
+                                              key={task.id}
+                                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border ${colorClasses}`}
+                                            >
+                                              {task.title} ({isDone ? 'Done' : 'Pending'})
+                                            </span>
+                                          );
+                                        })
                                       )}
                                     </div>
                                   </div>
