@@ -6,7 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useThemes } from '../onboarding/api';
 import { useDeleteTask, useUpdateTask, useUpdateTeamTask } from '../tasks/api';
 import { Spinner } from '../../components/ui/Spinner';
-import { EmptyState, ErrorState, Badge } from '../../components/ui/primitives';
+import { EmptyState, ErrorState } from '../../components/ui/primitives';
 import { useToast } from '../../components/ui/Toast';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
