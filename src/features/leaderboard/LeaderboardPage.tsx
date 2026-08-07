@@ -8,6 +8,8 @@ import { useDeleteTask, useUpdateTask, useUpdateTeamTask } from '../tasks/api';
 import { Spinner } from '../../components/ui/Spinner';
 import { EmptyState, ErrorState, Badge } from '../../components/ui/primitives';
 import { useToast } from '../../components/ui/Toast';
+import { Modal } from '../../components/ui/Modal';
+import { Button } from '../../components/ui/Button';
 
 const FALLBACK_THEMES = [
   { id: '1', name: 'Logic Quest' },
@@ -28,6 +30,11 @@ export function LeaderboardPage() {
 
   const [selectedTheme, setSelectedTheme] = useState<string>('all');
   const [expandedTeamId, setExpandedTeamId] = useState<number | null>(null);
+
+  const [isMarksModalOpen, setIsMarksModalOpen] = useState(false);
+  const [marksModalTask, setMarksModalTask] = useState<any>(null);
+  const [marksModalTeam, setMarksModalTeam] = useState<any>(null);
+  const [modalMarksValue, setModalMarksValue] = useState('');
 
   const { data: rawThemes = [] } = useThemes();
   const themes = useMemo(() => {
@@ -132,14 +139,19 @@ export function LeaderboardPage() {
 
   const handleUpdateTeamMarks = (team: any, task: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    const currentMarks = task.obtained_marks != null ? String(task.obtained_marks) : '';
-    const newVal = window.prompt(`Enter new marks for "${task.title}" (Max: ${task.marks}):`, currentMarks);
-    if (newVal !== null) {
-      const val = newVal.trim() === '' ? null : Number(newVal);
-      const assignedToIds = team.members.map((m: any) => m.id);
-      updateTeamTask.mutate({ title: task.title, assignedToIds, updates: { obtained_marks: val } });
-      toast(`Marks updated for "${task.title}"`, 'success');
-    }
+    setMarksModalTask(task);
+    setMarksModalTeam(team);
+    setModalMarksValue(task.obtained_marks != null ? String(task.obtained_marks) : '');
+    setIsMarksModalOpen(true);
+  };
+
+  const submitMarksUpdate = () => {
+    if (!marksModalTask || !marksModalTeam) return;
+    const val = modalMarksValue.trim() === '' ? null : Number(modalMarksValue);
+    const assignedToIds = marksModalTeam.members.map((m: any) => m.id);
+    updateTeamTask.mutate({ title: marksModalTask.title, assignedToIds, updates: { obtained_marks: val } });
+    toast(`Marks updated for "${marksModalTask.title}"`, 'success');
+    setIsMarksModalOpen(false);
   };
 
   const handleToggleStatus = (task: any) => {
@@ -391,6 +403,34 @@ export function LeaderboardPage() {
           </div>
         </div>
       )}
+
+      {/* Marks Update Modal */}
+      <Modal
+        open={isMarksModalOpen}
+        onClose={() => setIsMarksModalOpen(false)}
+        title={`Enter marks for "${marksModalTask?.title}"`}
+        description={`Maximum marks: ${marksModalTask?.marks}`}
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button variant="ghost" onClick={() => setIsMarksModalOpen(false)}>Cancel</Button>
+            <Button onClick={submitMarksUpdate}>Save Marks</Button>
+          </div>
+        }
+      >
+        <div className="field">
+          <input
+            type="number"
+            min="0"
+            max={marksModalTask?.marks}
+            className="arc-input"
+            value={modalMarksValue}
+            onChange={e => setModalMarksValue(e.target.value)}
+            placeholder={`e.g. ${marksModalTask?.marks}`}
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') submitMarksUpdate(); }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
