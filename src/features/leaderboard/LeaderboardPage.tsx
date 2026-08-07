@@ -271,35 +271,42 @@ export function LeaderboardPage() {
                               {team.tasks.length === 0 ? (
                                 <span className="text-xs text-text-muted italic">No tasks assigned</span>
                               ) : (
-                                team.tasks.map((task: any) => (
-                                  <div
-                                    key={task.id}
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted border border-hairline ${canEditScores ? 'cursor-pointer hover:bg-muted/80' : ''}`}
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      if (canEditScores) {
-                                        handleUpdateTeamMarks(team, task, e);
-                                      }
-                                    }}
-                                  >
-                                    <span className="text-text-primary">{task.title}</span>
-                                    {task.obtained_marks != null && (
-                                      <span className="text-accent-color font-semibold ml-1">
-                                        {task.obtained_marks}
-                                      </span>
-                                    )}
+                                team.tasks.map((task: any) => {
+                                  const isDone = task.status === 'completed';
+                                  const colorClasses = isDone 
+                                    ? 'bg-success-color/15 text-success-color border-success-color/20' 
+                                    : 'bg-danger-color/15 text-danger-color border-danger-color/20';
 
-                                    {isAdmin && (
-                                      <button
-                                        onClick={e => handleDeleteTask(team, task.title, e)}
-                                        className="ml-1 p-0.5 text-text-muted hover:text-danger-color rounded transition-colors"
-                                        title="Delete Task"
-                                      >
-                                        <Trash2 size={13} />
-                                      </button>
-                                    )}
-                                  </div>
-                                ))
+                                  return (
+                                    <div
+                                      key={task.id}
+                                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${colorClasses} ${canEditScores ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                                      onClick={e => {
+                                        e.stopPropagation();
+                                        if (canEditScores) {
+                                          handleUpdateTeamMarks(team, task, e);
+                                        }
+                                      }}
+                                    >
+                                      <span>{task.title}</span>
+                                      {task.obtained_marks != null && (
+                                        <span className="font-bold ml-1">
+                                          {task.obtained_marks}
+                                        </span>
+                                      )}
+
+                                      {isAdmin && (
+                                        <button
+                                          onClick={e => handleDeleteTask(team, task.title, e)}
+                                          className="ml-1 p-0.5 opacity-60 hover:opacity-100 rounded transition-opacity"
+                                          title="Delete Task"
+                                        >
+                                          <Trash2 size={13} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })
                               )}
                             </div>
 
@@ -354,40 +361,35 @@ export function LeaderboardPage() {
                                       {memberTasks.length === 0 ? (
                                         <p className="text-xs text-text-muted italic">No tasks assigned to member.</p>
                                       ) : (
-                                        memberTasks.map((task: any) => (
-                                          <div
-                                            key={task.id}
-                                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2.5 rounded bg-muted/30 border border-hairline"
-                                          >
-                                            <div className="min-w-0">
-                                              <p className="text-xs font-medium text-text-primary">{task.title}</p>
-                                              {task.due_date && (
-                                                <p className="text-[11px] text-text-muted">Due: {task.due_date}</p>
-                                              )}
-                                            </div>
-
-                                            <div className="flex items-center gap-3 flex-wrap">
-                                              {/* Status Toggle for Assigned Member */}
-                                              {task.assigned_to === profile?.id ? (
+                                        <div className="flex flex-wrap gap-2">
+                                          {memberTasks.map((task: any) => {
+                                            const isDone = task.status === 'completed';
+                                            const colorClasses = isDone 
+                                              ? 'bg-success-color/15 text-success-color border-success-color/20' 
+                                              : 'bg-danger-color/15 text-danger-color border-danger-color/20';
+                                            
+                                            if (task.assigned_to === profile?.id) {
+                                              return (
                                                 <button
+                                                  key={task.id}
                                                   onClick={() => handleToggleStatus(task)}
-                                                  className={`chip text-xs px-2.5 py-1 ${
-                                                    task.status === 'completed'
-                                                      ? 'bg-success-color/15 text-success-color font-semibold'
-                                                      : 'bg-warning-color/15 text-warning-color'
-                                                  }`}
+                                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border hover:opacity-80 transition-opacity ${colorClasses}`}
                                                 >
-                                                  {task.status === 'completed' ? '✓ Done' : '○ Pending'}
+                                                  {task.title} ({isDone ? 'Done' : 'Pending'})
                                                 </button>
-                                              ) : (
-                                                <Badge tone={task.status === 'completed' ? 'success' : 'warning'}>
-                                                  {task.status === 'completed' ? 'Done' : 'Pending'}
-                                                </Badge>
-                                              )}
+                                              );
+                                            }
 
-                                              </div>
-                                          </div>
-                                        ))
+                                            return (
+                                              <span
+                                                key={task.id}
+                                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${colorClasses}`}
+                                              >
+                                                {task.title} ({isDone ? 'Done' : 'Pending'})
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
                                       )}
                                     </div>
                                   </div>
