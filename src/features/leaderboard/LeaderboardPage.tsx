@@ -47,7 +47,6 @@ export function LeaderboardPage() {
           official_eyantra_id, 
           status, 
           created_by,
-          official_score,
           theme_id,
           theme:themes(id, name, slug),
           team_members:profiles!team_id(id, display_name, full_name, username, email, is_leader)
