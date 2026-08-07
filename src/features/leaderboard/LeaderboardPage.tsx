@@ -128,10 +128,7 @@ export function LeaderboardPage() {
     }
   };
 
-  const handleUpdateMarks = (taskId: string, newMarks: string) => {
-    const val = newMarks === '' ? null : Number(newMarks);
-    updateTask.mutate({ id: taskId, obtained_marks: val });
-  };
+
 
   const handleToggleStatus = (task: any) => {
     const nextStatus = task.status === 'completed' ? 'pending' : 'completed';
@@ -208,8 +205,6 @@ export function LeaderboardPage() {
                 {standings.map((team, idx) => {
                   const isExpanded = expandedTeamId === team.team_id;
                   const isMyTeam = profile?.team_id === team.team_id;
-                  const isLeaderOfTeam = isMyTeam && Boolean(profile?.is_leader);
-                  const canEditScores = isAdmin || isLeaderOfTeam;
 
                   return (
                     <tr key={team.team_id} className="group">
@@ -254,12 +249,12 @@ export function LeaderboardPage() {
                                     className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-muted border border-hairline"
                                     onClick={e => e.stopPropagation()}
                                   >
-                                    <span className="text-text-primary">{task.title}:</span>
-                                    <span className="text-accent-color font-semibold">
-                                      {task.obtained_marks !== null && task.obtained_marks !== undefined
-                                        ? `${task.obtained_marks}/${task.marks}`
-                                        : `-/${task.marks}`} pts
-                                    </span>
+                                    <span className="text-text-primary">{task.title}</span>
+                                    {task.obtained_marks != null && (
+                                      <span className="text-accent-color font-semibold ml-1">
+                                        {task.obtained_marks}
+                                      </span>
+                                    )}
 
                                     {isAdmin && (
                                       <button
@@ -357,24 +352,7 @@ export function LeaderboardPage() {
                                                 </Badge>
                                               )}
 
-                                              {/* Points Gained Input (Leader / Admin Only) */}
-                                              {canEditScores && task.marks > 0 && (
-                                                <div className="flex items-center gap-1.5 bg-surface border border-hairline rounded px-2 py-1">
-                                                  <label htmlFor={`score-${task.id}`} className="text-xs text-text-muted font-medium">Marks:</label>
-                                                  <input
-                                                    id={`score-${task.id}`}
-                                                    type="number"
-                                                    min="0"
-                                                    max={task.marks}
-                                                    defaultValue={task.obtained_marks ?? ''}
-                                                    onBlur={e => handleUpdateMarks(task.id, e.target.value)}
-                                                    className="w-12 text-xs p-0.5 text-center bg-muted border border-hairline rounded text-text-primary"
-                                                    placeholder={`${task.marks}`}
-                                                  />
-                                                  <span className="text-xs text-text-muted">/ {task.marks}</span>
-                                                </div>
-                                              )}
-                                            </div>
+                                              </div>
                                           </div>
                                         ))
                                       )}

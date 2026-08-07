@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from('profiles')
       .select('*, teams(theme_id)')
       .eq('id', userId)
-      .maybeSingle();
-    setProfile(data);
+      .limit(1);
+    setProfile(data?.[0] || null);
   };
 
   const refreshProfile = async () => {
