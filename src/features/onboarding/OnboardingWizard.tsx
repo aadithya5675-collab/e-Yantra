@@ -110,7 +110,7 @@ export function OnboardingWizard() {
                   style={{
                     borderColor: active || done ? 'var(--accent-color)' : 'var(--hairline)',
                     background: active || done ? 'var(--accent-color)' : 'transparent',
-                    color: active || done ? '#04121a' : 'var(--text-muted)',
+                    color: active || done ? 'var(--c-accent-contrast)' : 'var(--text-muted)',
                   }}
                 >
                   {i + 1}

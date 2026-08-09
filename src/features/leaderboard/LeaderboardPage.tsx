@@ -182,9 +182,9 @@ export function LeaderboardPage() {
               key={t.id}
               role="tab"
               aria-selected={t.id === activeThemeId}
+              data-active={t.id === activeThemeId}
               onClick={() => setSelectedTheme(t.id)}
-              className={`chip ${t.id === activeThemeId ? 'chip-active' : ''}`}
-              style={t.id === activeThemeId ? { background: 'var(--c-accent-color)', color: '#04121a' } : undefined}
+              className="chip"
             >
               {t.name}
             </button>
