@@ -174,6 +174,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    font-optical-sizing: auto;
     line-height: 1.55;
   }
 
@@ -194,12 +195,15 @@
     line-height: 1.2;
   }
 
-  /* Editorial display face — used sparingly on page titles. */
+  /* Editorial display face — used sparingly on page titles.
+     Optical sizing + size-appropriate negative tracking and tight leading
+     (large serif reads too loose otherwise). */
   .font-display {
     font-family: var(--font-serif);
     font-weight: 400;
-    letter-spacing: 0.004em;
-    line-height: 1.08;
+    font-optical-sizing: auto;
+    letter-spacing: -0.011em;
+    line-height: 1.03;
   }
 
   /* Numeric / technical metadata. */
@@ -306,13 +310,18 @@
     border: 1px solid transparent;
     cursor: pointer;
     white-space: nowrap;
-    transition: background-color 0.16s, border-color 0.16s, color 0.16s, transform 0.1s;
+    /* Kill the ~300ms tap delay and the mobile tap flash — response is instant. */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.16s, border-color 0.16s, color 0.16s,
+      transform 0.09s var(--ease-out-arc);
   }
+  /* Tactile press: feedback lives on pointer-down (:active), snappy and physical. */
   .btn:active,
   .btn-primary:active,
   .btn-secondary:active,
   .btn-ghost:active,
-  .btn-danger:active { transform: translateY(0.5px); }
+  .btn-danger:active { transform: scale(0.97); }
   .btn:disabled, .btn-primary:disabled, .btn-secondary:disabled,
   .btn-ghost:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-sm { min-height: 34px; padding: 0 11px; font-size: 13.5px; }
@@ -363,12 +372,16 @@
     background: transparent;
     border: 1px solid transparent;
     cursor: pointer;
-    transition: background-color 0.16s, color 0.16s, border-color 0.16s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.16s, color 0.16s, border-color 0.16s,
+      transform 0.09s var(--ease-out-arc);
   }
   .icon-btn:hover {
     background-color: color-mix(in oklab, var(--c-text) 6%, transparent);
     color: var(--c-text);
   }
+  .icon-btn:active { transform: scale(0.94); }
 
   /* ---- Chips & markers — rectangular competition labels, not pills -- */
   .chip {
@@ -383,9 +396,13 @@
     color: var(--c-text-2);
     background-color: var(--c-surface);
     cursor: pointer;
-    transition: all 0.16s var(--ease-out-arc);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.16s var(--ease-out-arc), background-color 0.16s var(--ease-out-arc),
+      border-color 0.16s var(--ease-out-arc), transform 0.09s var(--ease-out-arc);
   }
   .chip:hover { border-color: var(--c-accent); color: var(--c-text); }
+  .chip:active { transform: scale(0.97); }
   .chip[aria-selected="true"],
   .chip[data-active="true"] {
     background-color: color-mix(in oklab, var(--c-accent) 12%, var(--c-surface));
@@ -460,5 +477,25 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Reduced transparency — drop the blur on translucent chrome so it reads solid. */
+@media (prefers-reduced-transparency: reduce) {
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* High contrast — solidify borders so structure is defined, not just tonal. */
+@media (prefers-contrast: more) {
+  :root { --c-border: var(--c-border-strong); }
+  .surface-card,
+  .arc-panel,
+  .arc-input,
+  .chip,
+  .badge {
+    border-color: var(--c-border-strong);
   }
 }

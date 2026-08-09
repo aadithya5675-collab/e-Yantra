@@ -62,7 +62,7 @@ export function AppShell() {
       </aside>
 
       {/* ---- Mobile top bar ------------------------------------------- */}
-      <header className="lg:hidden sticky top-0 z-40 h-14 flex items-center justify-between px-4 bg-canvas/90 backdrop-blur border-b border-hairline"
+      <header className="lg:hidden sticky top-0 z-40 h-14 flex items-center justify-between px-4 bg-canvas/80 backdrop-blur-lg backdrop-saturate-150 border-b border-hairline"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="flex items-center gap-2.5">
           <Logo />
@@ -72,7 +72,7 @@ export function AppShell() {
       </header>
 
       {/* ---- Desktop header ------------------------------------------- */}
-      <header className="hidden lg:flex fixed top-0 right-0 left-64 h-16 items-center justify-between px-8 bg-canvas/85 backdrop-blur border-b border-hairline z-30">
+      <header className="hidden lg:flex fixed top-0 right-0 left-64 h-16 items-center justify-between px-8 bg-canvas/80 backdrop-blur-lg backdrop-saturate-150 border-b border-hairline z-30">
         <div>
           <p className="font-mono text-[11px] tracking-[0.04em] text-text-muted">Mission Control</p>
           <h1 className="font-display text-[22px] text-text-primary leading-tight">
