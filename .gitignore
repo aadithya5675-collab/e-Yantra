@@ -33,3 +33,5 @@ backend/.env.*
 *.njsproj
 *.sln
 *.sw?
+# AI tooling (local only)
+.claude/
